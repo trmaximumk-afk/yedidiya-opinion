@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   fetchOpinions, createOpinion, likeOpinion,
-  updateStatus, replyOpinion, deleteOpinion,
+  updateStatus, replyOpinion, deleteOpinion, supabaseConfig,
 } from "./lib/supabase";
 
 const ADMIN_PW = import.meta.env.VITE_ADMIN_PW || "2026";
@@ -233,6 +233,11 @@ export default function App() {
 
       {/* Main */}
       <main style={{padding:"16px 16px 100px",maxWidth:480,margin:"0 auto",opacity:anim?1:0,transition:"opacity .15s"}}>
+        {!supabaseConfig.isConfigured && (
+          <div style={{background:"#FEF2F2",border:"1px solid #FECACA",color:"#991B1B",borderRadius:12,padding:"12px 14px",fontSize:12.5,marginTop:8,marginBottom:12,lineHeight:1.5}}>
+            ⚠️ 데이터 연결 설정이 아직 완료되지 않았습니다. (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 확인 필요)
+          </div>
+        )}
 
         {/* ═══ HOME ═══ */}
         {page==="home"&&<div className="su">
