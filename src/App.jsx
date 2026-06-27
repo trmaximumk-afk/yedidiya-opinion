@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import {
-  fetchOpinions, createOpinion, likeOpinion,
-  updateStatus, replyOpinion, deleteOpinion, supabaseConfig,
+  fetchOpinions, fetchDeletedOpinions, createOpinion, likeOpinion,
+  updateStatus, replyOpinion, removeReply,
+  deleteOpinion, restoreOpinion, permanentDeleteOpinion,
 } from "./lib/supabase";
 
 const ADMIN_PW = import.meta.env.VITE_ADMIN_PW || "2026";
@@ -92,8 +93,10 @@ export default function App() {
   const [anim, setAnim] = useState(true);
   const [form, setForm] = useState({category:"",title:"",content:"",author:"",anonymous:true,secret:false,priority:"normal"});
   const [replyText, setReplyText] = useState("");
+  const [editingReply, setEditingReply] = useState(false);
   const [showDel, setShowDel] = useState(false);
   const [likedIds, setLikedIds] = useState({});
+  const [trash, setTrash] = useState([]);
 
   // Load opinions
   const load = useCallback(async () => {
@@ -119,7 +122,7 @@ export default function App() {
 
   const nav = (p, o = null) => {
     setAnim(false);
-    setTimeout(() => { setPage(p); setSelected(o); setAnim(true); setReplyText(""); setShowDel(false); }, 150);
+    setTimeout(() => { setPage(p); setSelected(o); setAnim(true); setReplyText(""); setShowDel(false); setEditingReply(false); }, 150);
   };
   const notify = m => { setToast(m); setTimeout(() => setToast(null), 2500); };
   const pubOps = isAdmin ? opinions : opinions.filter(o => !o.secret);
@@ -161,10 +164,22 @@ export default function App() {
     try { await updateStatus(id, s); await load(); } catch (e) { console.error(e); }
   };
   const doReply = async (id, r) => {
-    try { await replyOpinion(id, r); await load(); notify("💬 답변이 등록되었습니다"); } catch (e) { console.error(e); }
+    try { await replyOpinion(id, r); await load(); notify(editingReply ? "✏️ 답변이 수정되었습니다" : "💬 답변이 등록되었습니다"); setEditingReply(false); } catch (e) { console.error(e); }
+  };
+  const doRemoveReply = async (id) => {
+    try { await removeReply(id); await load(); notify("답변이 삭제되었습니다"); setEditingReply(false); setReplyText(""); } catch (e) { console.error(e); }
   };
   const doDel = async (id) => {
-    try { await deleteOpinion(id); await load(); notify("🗑️ 삭제되었습니다"); nav("list"); } catch (e) { console.error(e); }
+    try { await deleteOpinion(id); await load(); notify("🗑️ 휴지통으로 이동했습니다"); nav("list"); } catch (e) { console.error(e); }
+  };
+  const loadTrash = async () => {
+    try { const d = await fetchDeletedOpinions(); setTrash(d || []); } catch (e) { console.error(e); }
+  };
+  const doRestore = async (id) => {
+    try { await restoreOpinion(id); await load(); await loadTrash(); notify("♻️ 의견이 복구되었습니다"); } catch (e) { console.error(e); }
+  };
+  const doPermanentDel = async (id) => {
+    try { await permanentDeleteOpinion(id); await loadTrash(); notify("의견이 영구 삭제되었습니다"); } catch (e) { console.error(e); }
   };
 
   const getFiltered = useCallback(() => {
@@ -233,11 +248,6 @@ export default function App() {
 
       {/* Main */}
       <main style={{padding:"16px 16px 100px",maxWidth:480,margin:"0 auto",opacity:anim?1:0,transition:"opacity .15s"}}>
-        {!supabaseConfig.isConfigured && (
-          <div style={{background:"#FEF2F2",border:"1px solid #FECACA",color:"#991B1B",borderRadius:12,padding:"12px 14px",fontSize:12.5,marginTop:8,marginBottom:12,lineHeight:1.5}}>
-            ⚠️ 데이터 연결 설정이 아직 완료되지 않았습니다. (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 확인 필요)
-          </div>
-        )}
 
         {/* ═══ HOME ═══ */}
         {page==="home"&&<div className="su">
@@ -342,9 +352,20 @@ export default function App() {
             {selected.reply&&<div style={{background:"linear-gradient(135deg,#ECFDF5,#D1FAE5)",borderRadius:16,padding:16,marginBottom:16,border:"1px solid #A7F3D0"}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
                 <div style={{width:28,height:28,borderRadius:8,background:"#10B981",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>💬</div>
-                <div><div style={{fontSize:13,fontWeight:700,color:"#065F46"}}>임원진</div><div style={{fontSize:10,color:"#047857"}}>{selected.reply_date||""}</div></div>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#065F46"}}>임원진</div><div style={{fontSize:10,color:"#047857"}}>{selected.reply_date||""}</div></div>
+                {isAdmin&&!editingReply&&<div style={{display:"flex",gap:6}}>
+                  <button onClick={()=>{setEditingReply(true);setReplyText(selected.reply);}} style={{padding:"5px 12px",borderRadius:8,fontSize:11.5,fontWeight:600,background:"white",color:"#059669",border:"1px solid #A7F3D0"}}>✏️ 수정</button>
+                  <button onClick={()=>doRemoveReply(selected.id)} style={{padding:"5px 12px",borderRadius:8,fontSize:11.5,fontWeight:600,background:"white",color:"#DC2626",border:"1px solid #FECACA"}}>삭제</button>
+                </div>}
               </div>
-              <div style={{fontSize:13.5,color:"#065F46",lineHeight:1.7,paddingLeft:36,whiteSpace:"pre-wrap"}}>{selected.reply}</div>
+              {!editingReply?<div style={{fontSize:13.5,color:"#065F46",lineHeight:1.7,paddingLeft:36,whiteSpace:"pre-wrap"}}>{selected.reply}</div>
+              :<div style={{marginTop:4}}>
+                <textarea value={replyText} onChange={e=>setReplyText(e.target.value)} rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #A7F3D0",fontSize:13,outline:"none",lineHeight:1.5,marginBottom:8,background:"white"}}/>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{if(replyText.trim())doReply(selected.id,replyText);}} style={{padding:"8px 16px",borderRadius:10,background:replyText.trim()?"#10B981":"#D6D3D1",color:"white",fontSize:13,fontWeight:600}}>수정 완료</button>
+                  <button onClick={()=>{setEditingReply(false);setReplyText("");}} style={{padding:"8px 16px",borderRadius:10,background:"#F5F5F4",color:"#78716C",fontSize:13,fontWeight:500}}>취소</button>
+                </div>
+              </div>}
             </div>}
             {/* Admin tools */}
             {isAdmin&&<div style={S.card}>
@@ -353,8 +374,9 @@ export default function App() {
               <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>{Object.entries(STATUS_MAP).map(([k,v])=><button key={k} onClick={()=>doStatus(selected.id,k)} style={{padding:"6px 12px",borderRadius:8,fontSize:11.5,fontWeight:500,background:selected.status===k?v.color:v.bg,color:selected.status===k?"white":v.color}}>{v.label}</button>)}</div>
               {!selected.reply&&<><div style={{fontSize:12,fontWeight:600,color:"#78716C",marginBottom:6}}>💬 임원진 답변 작성</div><textarea value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 작성해주세요..." rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #E7E5E4",fontSize:13,outline:"none",lineHeight:1.5,marginBottom:8}}/><button onClick={()=>{if(replyText.trim()){doReply(selected.id,replyText);setReplyText("");}}} style={{padding:"10px 16px",borderRadius:10,background:replyText.trim()?"#10B981":"#D6D3D1",color:"white",fontSize:13,fontWeight:600}}>임원진 답변 등록</button></>}
               <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid #F5F5F4"}}>
-                {!showDel?<button onClick={()=>setShowDel(true)} style={{padding:"8px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA"}}>🗑️ 의견 삭제</button>
-                :<div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:12,color:"#DC2626",fontWeight:500}}>정말 삭제하시겠습니까?</span><button onClick={()=>doDel(selected.id)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,background:"#DC2626",color:"white"}}>삭제</button><button onClick={()=>setShowDel(false)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#F5F5F4",color:"#78716C"}}>취소</button></div>}
+                {!showDel?<button onClick={()=>setShowDel(true)} style={{padding:"8px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA"}}>🗑️ 휴지통으로 이동</button>
+                :<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:12,color:"#DC2626",fontWeight:500}}>휴지통으로 옮기시겠습니까?</span><button onClick={()=>doDel(selected.id)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,background:"#DC2626",color:"white"}}>이동</button><button onClick={()=>setShowDel(false)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#F5F5F4",color:"#78716C"}}>취소</button></div>}
+                <div style={{fontSize:11,color:"#A8A29E",marginTop:8}}>* 삭제해도 휴지통에서 복구할 수 있습니다</div>
               </div>
             </div>}
           </>);})()}
@@ -372,7 +394,8 @@ export default function App() {
               <div key={i} style={{background:"white",borderRadius:14,padding:"14px 10px",textAlign:"center",border:"1px solid #F5F5F4",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}><div style={{fontSize:18,marginBottom:2}}>{s.i}</div><div style={{fontSize:22,fontWeight:800,color:s.c,fontFamily:"'Outfit',sans-serif"}}>{s.v}</div><div style={{fontSize:10,color:"#78716C",marginTop:1}}>{s.l}</div></div>
             )}
           </div>
-          <button onClick={()=>exportToExcel(opinions)} style={{width:"100%",padding:14,borderRadius:14,marginBottom:16,background:"linear-gradient(135deg,#059669,#10B981)",color:"white",fontSize:14,fontWeight:700,boxShadow:"0 6px 20px rgba(16,185,129,0.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>📥 엑셀(CSV) 다운로드</button>
+          <button onClick={()=>exportToExcel(opinions)} style={{width:"100%",padding:14,borderRadius:14,marginBottom:12,background:"linear-gradient(135deg,#059669,#10B981)",color:"white",fontSize:14,fontWeight:700,boxShadow:"0 6px 20px rgba(16,185,129,0.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>📥 엑셀(CSV) 다운로드</button>
+          <button onClick={()=>{loadTrash();nav("trash");}} style={{width:"100%",padding:14,borderRadius:14,marginBottom:16,background:"white",color:"#78716C",fontSize:14,fontWeight:700,border:"1px solid #E7E5E4",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🗑️ 휴지통 (삭제된 의견 복구)</button>
           {/* Category chart */}
           <div style={{...S.card,marginBottom:16}}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>📈 카테고리별 현황</div>
             {CATEGORIES.map(c=>{const cnt=opinions.filter(o=>o.category===c.id).length;const mx=Math.max(...CATEGORIES.map(cc=>opinions.filter(o=>o.category===cc.id).length),1);return(
@@ -389,6 +412,37 @@ export default function App() {
             {opinions.filter(o=>o.status==="new").length===0?<div style={{textAlign:"center",padding:16,color:"#A8A29E",fontSize:13}}>✅ 모든 의견을 확인했습니다</div>
             :opinions.filter(o=>o.status==="new").map(o=><OpinionCard key={o.id} opinion={o} onClick={()=>nav("detail",o)} compact isAdmin={isAdmin}/>)}
           </div>
+        </div>}
+
+        {/* ═══ TRASH ═══ */}
+        {page==="trash"&&isAdmin&&<div className="su">
+          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:16}}>
+            <button onClick={()=>nav("admin")} style={{background:"none",fontSize:20,padding:4}}>←</button>
+            <h2 style={{fontSize:18,fontWeight:700}}>🗑️ 휴지통</h2>
+            <span style={{fontSize:13,color:"#A8A29E",fontWeight:500}}>{trash.length}건</span>
+            <button onClick={loadTrash} style={{marginLeft:"auto",background:"none",fontSize:16,padding:4}}>🔄</button>
+          </div>
+          <div style={{background:"#FFFBEB",borderRadius:14,padding:14,marginBottom:16,border:"1px solid #FDE68A"}}>
+            <div style={{fontSize:12.5,color:"#92400E",lineHeight:1.6}}>삭제된 의견이 보관되는 공간입니다. <strong>복구</strong>하면 다시 목록에 표시되고, <strong>영구 삭제</strong>하면 완전히 사라집니다.</div>
+          </div>
+          {trash.length===0?<div style={{textAlign:"center",padding:40,color:"#A8A29E"}}><div style={{fontSize:48,marginBottom:12}}>🗑️</div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>휴지통이 비어 있습니다</div><div style={{fontSize:13}}>삭제된 의견이 없습니다</div></div>
+          :trash.map(o=>{const cat=CATEGORIES.find(c=>c.id===o.category)||CATEGORIES[5];return(
+            <div key={o.id} style={{background:"white",borderRadius:16,padding:"16px 18px",marginBottom:10,border:"1px solid #F5F5F4",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",borderLeft:`3px solid ${cat.color}`,opacity:0.85}}>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
+                {o.secret&&<span style={{fontSize:10.5,fontWeight:700,padding:"2px 8px",borderRadius:6,background:"#FEE2E2",color:"#DC2626"}}>🔒 비밀글</span>}
+                <span style={{fontSize:10.5,fontWeight:600,padding:"2px 8px",borderRadius:6,background:cat.bg,color:cat.color}}>{cat.label}</span>
+              </div>
+              <div style={{fontSize:14,fontWeight:600,color:"#1C1917",marginBottom:4}}>{o.title}</div>
+              <div style={{fontSize:12.5,color:"#78716C",lineHeight:1.5,marginBottom:8,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{o.content}</div>
+              <div style={{fontSize:11,color:"#A8A29E",marginBottom:10}}>
+                {o.secret?`🔒 ${o.author}`:(o.anonymous?"🕶️ 익명":`😊 ${o.author}`)} · 작성 {fmtDate(o.created_at)} · 삭제 {fmtDate(o.deleted_at)}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>doRestore(o.id)} style={{flex:1,padding:"10px",borderRadius:10,background:"linear-gradient(135deg,#6366F1,#8B5CF6)",color:"white",fontSize:13,fontWeight:600}}>♻️ 복구하기</button>
+                <button onClick={()=>{if(window.confirm("정말 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다."))doPermanentDel(o.id);}} style={{padding:"10px 16px",borderRadius:10,background:"#FEF2F2",color:"#DC2626",fontSize:13,fontWeight:600,border:"1px solid #FECACA"}}>영구 삭제</button>
+              </div>
+            </div>
+          );})}
         </div>}
       </main>
 
