@@ -8,7 +8,6 @@
 ```bash
 export SUPABASE_URL="https://<project>.supabase.co"
 export SUPABASE_ANON_KEY="<anon-key>"
-export ADMIN_PW="2026"
 ./scripts/auto_setup.sh
 ```
 
@@ -22,7 +21,6 @@ export REPO_URL="https://github.com/trmaximumk-afk/yedidiya-opinion.git"
 ```bash
 export VITE_SUPABASE_URL="$SUPABASE_URL"
 export VITE_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
-export VITE_ADMIN_PW="$ADMIN_PW"
 ./scripts/auto_vercel.sh
 ```
 

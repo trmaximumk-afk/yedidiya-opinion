@@ -41,7 +41,6 @@ git push -u origin main
 |-----|-------|
 | `VITE_SUPABASE_URL` | Supabase Dashboard > Settings > API > Project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Dashboard > Settings > API > anon public |
-| `VITE_ADMIN_PW` | `2026` (원하는 비밀번호로 변경 가능) |
 
 5. **Deploy** 클릭!
 
@@ -61,7 +60,7 @@ git push -u origin main
 - ❤️ 공감 가능
 
 ### 임원진
-- 우측 상단 🔒 → 비밀번호 입력 → 임원진 모드
+- 여디디야청년부 앱(https://yedidiya-youth.vercel.app/)에서 "여디디야 의견함 관리자"로 들어오면 바로 임원진 모드 (사역자·임원만, 비밀번호 없음. 2026-11-24)
 - 비밀글 확인 (작성자 실명 포함)
 - 답변 작성 ("임원진" 이름으로 표시)
 - 상태 변경 (새 의견 → 확인됨 → 답변완료 → 보관)
