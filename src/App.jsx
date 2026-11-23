@@ -7,25 +7,68 @@ import {
 
 const ADMIN_PW = import.meta.env.VITE_ADMIN_PW || "2026";
 
+// ─── 여디디야 통합 디자인 v1.1 ───
+// 색·글꼴·모양은 /yd/tokens.css 의 변수(var(--yd-…))와 .yd-… 모양만 쓴다.
+// 아이콘은 /yd/icons.js 의 선 아이콘(window.YD_ICONS)을 그대로 그린다. 화면에 이모지를 넣지 않는다.
+function Icon({ n, s = 16, c, fill, style }) {
+  const paths = (typeof window !== "undefined" && window.YD_ICONS && window.YD_ICONS[n]) || "";
+  return <svg className="yd-icon" xmlns="http://www.w3.org/2000/svg" width={s} height={s} viewBox="0 0 24 24" fill={fill?"currentColor":"none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{color:c,...style}} dangerouslySetInnerHTML={{__html:paths}}/>;
+}
+
+// id 는 DB(opinions.category)에 저장되는 값이고 label 은 CSV 내보내기에 그대로 쓰이므로 건드리지 않는다.
+// 화면에는 icon + name 으로 그린다. color=글자, solid=채움(선택·막대), bg=옅은 바탕, ring=테두리.
 const CATEGORIES = [
-  { id: "suggest", label: "💡 사역 제안", color: "#6366F1", bg: "#EEF2FF" },
-  { id: "feedback", label: "📋 건의사항", color: "#F59E0B", bg: "#FFFBEB" },
-  { id: "thanks", label: "💛 감사/격려", color: "#10B981", bg: "#ECFDF5" },
-  { id: "concern", label: "🤔 고민/상담", color: "#EC4899", bg: "#FDF2F8" },
-  { id: "event", label: "🎪 행사 아이디어", color: "#8B5CF6", bg: "#F5F3FF" },
-  { id: "other", label: "✏️ 기타", color: "#64748B", bg: "#F8FAFC" },
+  { id: "suggest", label: "💡 사역 제안", name: "사역 제안", icon: "lightbulb", color: "var(--yd-navy-800)", solid: "var(--yd-navy-800)", bg: "var(--yd-navy-100)", ring: "var(--yd-navy-200)" },
+  { id: "feedback", label: "📋 건의사항", name: "건의사항", icon: "clipboard", color: "var(--yd-gold-700)", solid: "var(--yd-gold-600)", bg: "var(--yd-gold-50)", ring: "var(--yd-gold-200)" },
+  { id: "thanks", label: "💛 감사/격려", name: "감사/격려", icon: "handheart", color: "var(--yd-green-700)", solid: "var(--yd-green-600)", bg: "var(--yd-green-50)", ring: "var(--yd-green-200)" },
+  { id: "concern", label: "🤔 고민/상담", name: "고민/상담", icon: "help", color: "var(--yd-blue-600)", solid: "var(--yd-blue-500)", bg: "var(--yd-blue-50)", ring: "var(--yd-blue-200)" },
+  { id: "event", label: "🎪 행사 아이디어", name: "행사 아이디어", icon: "party", color: "var(--yd-orange-600)", solid: "var(--yd-orange-600)", bg: "var(--yd-orange-50)", ring: "var(--yd-orange-200)" },
+  { id: "other", label: "✏️ 기타", name: "기타", icon: "pencil", color: "var(--yd-gray-600)", solid: "var(--yd-gray-500)", bg: "var(--yd-gray-100)", ring: "var(--yd-gray-200)" },
 ];
 const PRIORITY = [
-  { id: "normal", label: "일반", color: "#64748B" },
-  { id: "important", label: "중요", color: "#F59E0B" },
-  { id: "urgent", label: "긴급", color: "#EF4444" },
+  { id: "normal", label: "일반", color: "var(--yd-gray-600)", solid: "var(--yd-gray-600)", bg: "var(--yd-gray-100)", ring: "var(--yd-gray-200)" },
+  { id: "important", label: "중요", color: "var(--yd-gold-700)", solid: "var(--yd-gold-600)", bg: "var(--yd-gold-100)", ring: "var(--yd-gold-200)" },
+  { id: "urgent", label: "긴급", color: "var(--yd-red-700)", solid: "var(--yd-red-600)", bg: "var(--yd-red-50)", ring: "var(--yd-red-200)" },
 ];
 const STATUS_MAP = {
-  new: { label: "새 의견", color: "#6366F1", bg: "#EEF2FF" },
-  read: { label: "확인됨", color: "#64748B", bg: "#F1F5F9" },
-  replied: { label: "답변완료", color: "#10B981", bg: "#ECFDF5" },
-  archived: { label: "보관됨", color: "#94A3B8", bg: "#F8FAFC" },
+  new: { label: "새 의견", color: "var(--yd-navy-700)", bg: "var(--yd-navy-50)", ring: "var(--yd-navy-200)" },
+  read: { label: "확인됨", color: "var(--yd-gray-600)", bg: "var(--yd-gray-100)", ring: "var(--yd-gray-200)" },
+  replied: { label: "답변완료", color: "var(--yd-green-700)", bg: "var(--yd-green-50)", ring: "var(--yd-green-200)" },
+  archived: { label: "보관됨", color: "var(--yd-gray-500)", bg: "var(--yd-gray-50)", ring: "var(--yd-gray-200)" },
 };
+
+// 화면 모양 묶음(색·둥글기·글자 크기만 담는다)
+const chip = (o, big) => ({display:"inline-flex",alignItems:"center",gap:4,fontSize:big?11:10.5,fontWeight:600,lineHeight:1.5,padding:big?"3px 10px":"2px 8px",borderRadius:999,background:o.bg,color:o.color,boxShadow:o.ring?`inset 0 0 0 1px ${o.ring}`:"none",whiteSpace:"nowrap"});
+const SECRET_CHIP = { color: "var(--yd-wine-700)", bg: "var(--yd-wine-100)" };
+const UI = {
+  titleRow: {display:"flex",alignItems:"center",gap:10,marginTop:16,marginBottom:20},
+  iconBtn: {width:36,height:36,flex:"none",display:"inline-flex",alignItems:"center",justifyContent:"center",borderRadius:12,background:"#fff",border:"1px solid var(--yd-gray-200)",color:"var(--yd-navy-800)",boxShadow:"var(--yd-shadow-sm)"},
+  h2: {fontSize:20,fontWeight:700,fontFamily:"var(--yd-serif)",letterSpacing:"-0.02em",color:"var(--yd-navy-900)"},
+  count: {fontSize:13,color:"var(--yd-gray-500)",fontWeight:500},
+  label: {fontSize:14,fontWeight:700,color:"var(--yd-gray-900)",marginBottom:10},
+  cardTitle: {display:"flex",alignItems:"center",gap:8,fontSize:14,fontWeight:700,color:"var(--yd-gray-900)",marginBottom:12},
+  filter: {display:"inline-flex",alignItems:"center",gap:5,padding:"7px 13px",borderRadius:999,fontSize:12,fontWeight:600,whiteSpace:"nowrap"},
+  mini: {display:"inline-flex",alignItems:"center",gap:4,padding:"5px 11px",borderRadius:10,fontSize:11.5,fontWeight:600,background:"#fff"},
+  knob: {width:22,height:22,borderRadius:11,background:"#fff",position:"absolute",top:3,transition:"left .2s",boxShadow:"0 1px 4px rgba(15,36,66,0.25)"},
+  empty: {textAlign:"center",padding:40,color:"var(--yd-gray-500)"},
+};
+
+// 알림 문구 맨 앞의 기호는 화면에 그릴 때만 선 아이콘으로 바꾼다(문구는 그대로 둔다).
+const TOAST_ICONS = { "⚠": "warn", "\u{1F512}": "lock", "✅": "checkcircle", "❌": "xcircle", "✏": "pencil", "\u{1F4AC}": "message", "\u{1F5D1}": "trash", "♻": "undo", "\u{1F513}": "unlock" };
+function splitToast(m) {
+  const i = m.indexOf(" ");
+  const icon = i > 0 ? TOAST_ICONS[m.slice(0, i).replace(/\uFE0F/g, "")] : null;
+  return icon ? { icon, text: m.slice(i + 1) } : { icon: null, text: m };
+}
+function Toast({ msg }) {
+  const t = splitToast(msg);
+  return (
+    <div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:8,width:"max-content",background:"var(--yd-navy-950)",color:"#fff",padding:"12px 20px",borderRadius:14,fontSize:14,fontWeight:500,zIndex:1000,boxShadow:"var(--yd-shadow-xl)",border:"1px solid rgba(255,255,255,0.08)",maxWidth:"90%",textAlign:"center"}} className="su">
+      {t.icon&&<Icon n={t.icon} s={16} c={t.icon==="xcircle"?"var(--yd-red-300)":"var(--yd-gold-300)"}/>}
+      <span>{t.text}</span>
+    </div>
+  );
+}
 
 function exportToExcel(opinions) {
   const catMap = {}; CATEGORIES.forEach(c => catMap[c.id] = c.label);
@@ -52,24 +95,24 @@ function OpinionCard({ opinion, onClick, compact, isAdmin }) {
   const st = STATUS_MAP[opinion.status]||STATUS_MAP.new;
   const pri = PRIORITY.find(p=>p.id===opinion.priority);
   return (
-    <button onClick={onClick} style={{width:"100%",textAlign:"left",background:opinion.secret?"#FFFBFB":"white",borderRadius:16,padding:compact?"14px 16px":"16px 18px",marginBottom:10,border:opinion.secret?"1px solid #FECACA":"1px solid #F5F5F4",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",borderLeft:`3px solid ${cat.color}`,position:"relative",fontFamily:"inherit"}}>
-      {opinion.secret&&<div style={{position:"absolute",top:8,right:8,fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:6,background:"#FEE2E2",color:"#DC2626"}}>🔒 비밀글</div>}
+    <button onClick={onClick} style={{width:"100%",textAlign:"left",background:opinion.secret?"var(--yd-wine-50)":"#fff",borderRadius:16,padding:compact?"14px 16px":"16px 18px",marginBottom:10,border:opinion.secret?"1px solid var(--yd-wine-200)":"1px solid var(--yd-gray-200)",boxShadow:"var(--yd-shadow-sm)",borderLeft:`3px solid ${cat.solid}`,position:"relative",fontFamily:"inherit",color:"var(--yd-gray-900)"}}>
+      {opinion.secret&&<div style={{...chip(SECRET_CHIP),position:"absolute",top:8,right:8,fontSize:9.5,fontWeight:700}}><Icon n="lock" s={10}/>비밀글</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
-            <span style={{fontSize:10.5,fontWeight:600,padding:"2px 8px",borderRadius:6,background:cat.bg,color:cat.color}}>{cat.label}</span>
-            <span style={{fontSize:10.5,fontWeight:500,padding:"2px 8px",borderRadius:6,background:st.bg,color:st.color}}>{st.label}</span>
-            {opinion.priority!=="normal"&&pri&&<span style={{fontSize:10.5,fontWeight:600,padding:"2px 8px",borderRadius:6,background:pri.color==="#EF4444"?"#FEE2E2":"#FEF3C7",color:pri.color}}>{pri.label}</span>}
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6,paddingRight:opinion.secret?60:0}}>
+            <span style={chip(cat)}><Icon n={cat.icon} s={11}/>{cat.name}</span>
+            <span style={chip(st)}>{st.label}</span>
+            {opinion.priority!=="normal"&&pri&&<span style={chip(pri)}>{pri.label}</span>}
           </div>
-          <div style={{fontSize:14,fontWeight:600,color:"#1C1917",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:compact?"nowrap":"normal",paddingRight:opinion.secret?60:0}}>{opinion.title}</div>
-          {!compact&&<div style={{fontSize:12.5,color:"#78716C",lineHeight:1.5,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{opinion.content}</div>}
+          <div style={{fontSize:14,fontWeight:600,color:"var(--yd-gray-900)",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:compact?"nowrap":"normal",paddingRight:opinion.secret?60:0}}>{opinion.title}</div>
+          {!compact&&<div style={{fontSize:12.5,color:"var(--yd-gray-600)",lineHeight:1.5,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{opinion.content}</div>}
         </div>
-        {!opinion.secret&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0,marginTop:compact?0:4}}><span style={{fontSize:12}}>❤️</span><span style={{fontSize:12,fontWeight:600,color:"#78716C"}}>{opinion.likes}</span></div>}
+        {!opinion.secret&&<div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0,marginTop:compact?0:4}}><Icon n="heart" s={13} c="var(--yd-red-500)" fill/><span className="yd-tabular" style={{fontSize:12,fontWeight:600,color:"var(--yd-gray-600)"}}>{opinion.likes}</span></div>}
       </div>
-      <div style={{display:"flex",justifyContent:"space-between",marginTop:8,fontSize:11,color:"#A8A29E"}}>
-        <span>{opinion.secret?(isAdmin?`🔒 ${opinion.author}`:"🔒 비밀글"):(opinion.anonymous?"🕶️ 익명":`😊 ${opinion.author}`)}</span>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          {opinion.reply&&<span style={{fontSize:10,fontWeight:600,color:"#10B981"}}>💬</span>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:8,fontSize:11,color:"var(--yd-gray-500)"}}>
+        <span>{opinion.secret?(isAdmin?<><Icon n="lock" s={12}/> {opinion.author}</>:<><Icon n="lock" s={12}/> 비밀글</>):(opinion.anonymous?<><Icon n="eyeoff" s={12}/> 익명</>:<><Icon n="user" s={12}/> {opinion.author}</>)}</span>
+        <div style={{display:"flex",gap:8,alignItems:"center",flex:"none"}}>
+          {opinion.reply&&<Icon n="message" s={13} c="var(--yd-green-600)"/>}
           <span>{fmtDate(opinion.created_at)}</span>
         </div>
       </div>
@@ -204,44 +247,53 @@ export default function App() {
     else notify("❌ 비밀번호가 올바르지 않습니다");
   };
 
-  const S = { card: { background: "white", borderRadius: 16, padding: 16, marginBottom: 12, border: "1px solid #F5F5F4", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" } };
+  const S = { card: { background: "#fff", borderRadius: 20, padding: 16, marginBottom: 12, border: "1px solid var(--yd-gray-200)", boxShadow: "var(--yd-shadow-sm)" } };
+  // 제출 버튼의 색만 정한다(누를 수 있는지는 바꾸지 않는다)
+  const ready = form.category&&form.title&&form.content&&(!form.secret||form.author);
 
   if (loading) return (
-    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#FAFAF9",gap:16}}>
-      <div style={{width:40,height:40,border:"3px solid #E7E5E4",borderTop:"3px solid #6366F1",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-      <div style={{fontSize:14,color:"#78716C",fontWeight:500}}>의견함을 불러오는 중...</div>
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"var(--yd-ivory)",gap:16}}>
+      <div style={{width:40,height:40,border:"3px solid var(--yd-gray-200)",borderTop:"3px solid var(--yd-navy-600)",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+      <div style={{fontSize:14,color:"var(--yd-gray-500)",fontWeight:500}}>의견함을 불러오는 중...</div>
     </div>
   );
 
   return (
-    <div style={{minHeight:"100vh",background:"#FAFAF9"}}>
+    <div style={{minHeight:"100vh",background:"var(--yd-ivory)"}}>
       {/* Toast */}
-      {toast&&<div style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",background:"#1C1917",color:"white",padding:"12px 24px",borderRadius:16,fontSize:14,fontWeight:500,zIndex:1000,boxShadow:"0 8px 32px rgba(0,0,0,0.2)",maxWidth:"90%",textAlign:"center"}} className="su">{toast}</div>}
+      {toast&&<Toast msg={toast}/>}
 
       {/* Login Modal */}
-      {showLogin&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowLogin(false)}>
-        <div style={{background:"white",borderRadius:24,padding:32,width:"100%",maxWidth:320,boxShadow:"0 24px 64px rgba(0,0,0,0.15)"}} onClick={e=>e.stopPropagation()} className="su">
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <div style={{fontSize:48,marginBottom:12}}>🔐</div>
-            <h3 style={{fontSize:18,fontWeight:700,color:"#1C1917"}}>임원진 인증</h3>
-            <p style={{fontSize:12.5,color:"#78716C",marginTop:6}}>비밀번호를 입력해주세요</p>
+      {showLogin&&<div style={{position:"fixed",inset:0,background:"rgba(8,23,45,0.6)",backdropFilter:"blur(2px)",WebkitBackdropFilter:"blur(2px)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowLogin(false)}>
+        <div style={{background:"#fff",borderRadius:28,padding:"28px 24px 24px",width:"100%",maxWidth:320,boxShadow:"var(--yd-shadow-xl)"}} onClick={e=>e.stopPropagation()} className="su">
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <div style={{width:56,height:56,margin:"0 auto 12px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--yd-gold-50)",color:"var(--yd-gold-600)",boxShadow:"inset 0 0 0 1px var(--yd-gold-200)"}}><Icon n="shield" s={26}/></div>
+            <h3 style={{fontSize:20,fontWeight:700,fontFamily:"var(--yd-serif)",letterSpacing:"-0.02em",color:"var(--yd-gray-900)"}}>임원진 인증</h3>
+            <p style={{fontSize:12.5,color:"var(--yd-gray-500)",marginTop:6}}>비밀번호를 입력해주세요</p>
           </div>
-          <input type="password" value={loginPw} onChange={e=>setLoginPw(e.target.value)} placeholder="비밀번호" autoFocus onKeyDown={e=>e.key==="Enter"&&doLogin()} style={{width:"100%",padding:"14px 16px",fontSize:16,textAlign:"center",border:"2px solid #E7E5E4",borderRadius:14,outline:"none",letterSpacing:4,fontWeight:600}}/>
-          <button onClick={doLogin} style={{width:"100%",marginTop:16,padding:14,borderRadius:14,background:"#6366F1",color:"white",fontSize:15,fontWeight:600}}>확인</button>
+          <input className="yd-input" type="password" value={loginPw} onChange={e=>setLoginPw(e.target.value)} placeholder="비밀번호" autoFocus onKeyDown={e=>e.key==="Enter"&&doLogin()} style={{padding:"14px 16px",fontSize:16,textAlign:"center",letterSpacing:4,fontWeight:600}}/>
+          <button onClick={doLogin} className="yd-btn yd-btn-gold" style={{width:"100%",marginTop:14,padding:14,fontSize:15}}>확인</button>
         </div>
       </div>}
 
       {/* Header */}
-      <header style={{background:"linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#6366F1 100%)",padding:"32px 20px 28px",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:-40,right:-40,width:160,height:160,borderRadius:"50%",background:"rgba(255,255,255,0.08)"}}/>
-        <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div>
-            <div style={{display:"inline-block",background:"rgba(255,255,255,0.18)",padding:"4px 12px",borderRadius:100,fontSize:11,color:"rgba(255,255,255,0.9)",fontWeight:500,marginBottom:10}}>여디디야 청년부</div>
-            <h1 style={{fontSize:24,fontWeight:800,color:"white",fontFamily:"'Outfit','Noto Sans KR',sans-serif"}}>의견함 📮</h1>
-            <p style={{fontSize:13,color:"rgba(255,255,255,0.75)",marginTop:4}}>여러분의 목소리가 여디디야를 만들어갑니다</p>
+      <header className="yd-hero" style={{padding:"24px 20px 24px",position:"relative",overflow:"hidden"}}>
+        <div aria-hidden="true" style={{position:"absolute",left:0,right:0,bottom:0,height:2,background:"linear-gradient(90deg,#EC2036 0%,rgba(204,168,95,.7) 50%,rgba(204,168,95,0) 100%)"}}/>
+        <div style={{position:"relative",zIndex:1,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+          <div style={{minWidth:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:14}}>
+              <img src="/yd/brand/church-symbol-light.svg" alt="" width="32" height="28" style={{display:"block",flex:"none"}}/>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#fff",lineHeight:1.25,letterSpacing:"-0.02em"}}>대전대흥침례교회</div>
+                <div style={{fontSize:11,color:"var(--yd-gold-300)",fontWeight:500,lineHeight:1.3,marginTop:1}}>여디디야 청년부</div>
+              </div>
+            </div>
+            <h1 style={{fontSize:30,lineHeight:1.15,fontWeight:700,color:"#fff",fontFamily:"var(--yd-serif)",letterSpacing:"-0.02em"}}>의견함</h1>
+            <div className="yd-gold-rule" style={{width:150,margin:"12px 0 10px"}}/>
+            <p style={{fontSize:13,color:"rgba(255,255,255,0.78)"}}>여러분의 목소리가 여디디야를 만들어갑니다</p>
           </div>
-          <button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):setShowLogin(true)} style={{background:isAdmin?"rgba(16,185,129,0.25)":"rgba(255,255,255,0.15)",border:isAdmin?"1px solid rgba(16,185,129,0.4)":"1px solid rgba(255,255,255,0.2)",borderRadius:12,padding:"8px 14px",color:"white",fontSize:11,fontWeight:500}}>
-            {isAdmin?"✅ 임원진":"🔒 로그인"}
+          <button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):setShowLogin(true)} className="yd-btn yd-btn-onhero" style={{flex:"none",gap:6,padding:"8px 12px",borderRadius:12,fontSize:12,fontWeight:600,...(isAdmin?{background:"rgba(201,169,97,0.16)",borderColor:"rgba(220,194,134,0.6)",color:"var(--yd-gold-200)"}:{})}}>
+            {isAdmin?<><Icon n="shieldcheck" s={14}/>임원진</>:<><Icon n="lock" s={14}/>로그인</>}
           </button>
         </div>
       </header>
@@ -251,132 +303,132 @@ export default function App() {
 
         {/* ═══ HOME ═══ */}
         {page==="home"&&<div className="su">
-          <div style={{display:"grid",gridTemplateColumns:isAdmin?"1fr 1fr 1fr 1fr":"1fr 1fr 1fr",gap:10,marginTop:16,marginBottom:20}}>
-            {[{v:isAdmin?stats.total:stats.pub,l:"전체 의견",c:"#6366F1"},{v:stats.new_,l:"새 의견",c:"#F59E0B"},{v:stats.replied,l:"답변완료",c:"#10B981"},...(isAdmin?[{v:stats.secret,l:"비밀글",c:"#DC2626"}]:[])].map((s,i)=>
-              <div key={i} style={{background:"white",borderRadius:16,padding:"14px 8px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",border:"1px solid #F5F5F4"}}>
-                <div style={{fontSize:isAdmin?22:26,fontWeight:800,color:s.c,fontFamily:"'Outfit',sans-serif"}}>{s.v}</div>
-                <div style={{fontSize:10,color:"#78716C",fontWeight:500,marginTop:2}}>{s.l}</div>
+          <div className="yd-card-navy" style={{display:"grid",gridTemplateColumns:isAdmin?"1fr 1fr 1fr 1fr":"1fr 1fr 1fr",gap:8,padding:12,marginTop:16,marginBottom:20}}>
+            {[{v:isAdmin?stats.total:stats.pub,l:"전체 의견",c:"var(--yd-navy-200)"},{v:stats.new_,l:"새 의견",c:"var(--yd-gold-300)"},{v:stats.replied,l:"답변완료",c:"var(--yd-green-200)"},...(isAdmin?[{v:stats.secret,l:"비밀글",c:"var(--yd-wine-300)"}]:[])].map((s,i)=>
+              <div key={i} style={{background:"rgba(255,255,255,0.06)",borderRadius:14,padding:"14px 6px 12px",textAlign:"center",border:"1px solid rgba(255,255,255,0.10)"}}>
+                <div className="yd-tabular" style={{fontSize:isAdmin?22:26,fontWeight:800,lineHeight:1.2,color:"#fff"}}>{s.v}</div>
+                <div style={{fontSize:10.5,color:s.c,fontWeight:600,marginTop:3}}>{s.l}</div>
               </div>
             )}
           </div>
           <div style={{display:"flex",gap:10,marginBottom:20}}>
-            <button onClick={()=>nav("submit")} style={{flex:1,padding:"18px 16px",borderRadius:20,background:"linear-gradient(135deg,#6366F1,#8B5CF6)",color:"white",fontSize:15,fontWeight:700,boxShadow:"0 8px 24px rgba(99,102,241,0.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>✍️ 의견 남기기</button>
-            <button onClick={()=>{setForm(f=>({...f,secret:true,anonymous:false}));nav("submit");}} style={{padding:"18px 18px",borderRadius:20,background:"linear-gradient(135deg,#DC2626,#EF4444)",color:"white",fontSize:15,fontWeight:700,boxShadow:"0 8px 24px rgba(220,38,38,0.2)",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>🔒 비밀글</button>
+            <button onClick={()=>nav("submit")} className="yd-btn yd-btn-primary" style={{flex:1,padding:"18px 16px",borderRadius:16,fontSize:15,fontWeight:700}}><Icon n="pen" s={18}/>의견 남기기</button>
+            <button onClick={()=>{setForm(f=>({...f,secret:true,anonymous:false}));nav("submit");}} className="yd-btn" style={{gap:6,padding:"18px 18px",borderRadius:16,background:"var(--yd-wine-600)",color:"#fff",fontSize:15,fontWeight:700,boxShadow:"var(--yd-shadow-md)"}}><Icon n="lock" s={17}/>비밀글</button>
           </div>
-          <div style={{background:"linear-gradient(135deg,#FFFBEB,#FEF3C7)",borderRadius:16,padding:16,marginBottom:20,border:"1px solid #FDE68A"}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#92400E",marginBottom:8}}>📮 여디디야 의견함 안내</div>
-            <div style={{fontSize:12.5,color:"#78350F",lineHeight:1.7}}>사역 제안, 건의사항, 감사, 고민 상담 등 자유롭게 의견을 남겨주세요. <strong>🔒 비밀글</strong>은 임원진만 확인 가능하며 <strong>실명 작성</strong>이 필요합니다.</div>
+          <div style={{background:"var(--yd-gold-50)",borderRadius:16,padding:16,marginBottom:20,border:"1px solid var(--yd-gold-200)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,fontSize:14,fontWeight:700,color:"var(--yd-gold-800)",marginBottom:8}}><span className="yd-headicon" style={{background:"#fff"}}><Icon n="inbox" s={15}/></span>여디디야 의견함 안내</div>
+            <div style={{fontSize:12.5,color:"var(--yd-gold-900)",lineHeight:1.7}}>사역 제안, 건의사항, 감사, 고민 상담 등 자유롭게 의견을 남겨주세요. <strong style={{whiteSpace:"nowrap"}}><Icon n="lock" s={12}/> 비밀글</strong>은 임원진만 확인 가능하며 <strong>실명 작성</strong>이 필요합니다.</div>
           </div>
           {pubOps.length>0?<>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <h2 style={{fontSize:16,fontWeight:700,color:"#1C1917"}}>최근 의견</h2>
-              <button onClick={()=>nav("list")} style={{fontSize:12,color:"#6366F1",fontWeight:600,background:"none",padding:"4px 8px"}}>전체보기 →</button>
+              <h2 style={{display:"flex",alignItems:"center",gap:8,fontSize:17,fontWeight:700,fontFamily:"var(--yd-serif)",letterSpacing:"-0.02em",color:"var(--yd-navy-900)"}}><span className="yd-bar"/>최근 의견</h2>
+              <button onClick={()=>nav("list")} style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:12,color:"var(--yd-navy-600)",fontWeight:600,background:"none",padding:"4px 8px"}}>전체보기<Icon n="arrowright" s={13}/></button>
             </div>
             {pubOps.slice(0,3).map(o=><OpinionCard key={o.id} opinion={o} onClick={()=>nav("detail",o)} compact isAdmin={isAdmin}/>)}
-          </>:<div style={{textAlign:"center",padding:40,color:"#A8A29E"}}><div style={{fontSize:48,marginBottom:12}}>📭</div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>아직 의견이 없습니다</div><div style={{fontSize:13}}>첫 번째 의견을 남겨보세요!</div></div>}
+          </>:<div style={UI.empty}><div style={{marginBottom:12,color:"var(--yd-gray-300)"}}><Icon n="inbox" s={48}/></div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>아직 의견이 없습니다</div><div style={{fontSize:13}}>첫 번째 의견을 남겨보세요!</div></div>}
         </div>}
 
         {/* ═══ SUBMIT ═══ */}
         {page==="submit"&&<div className="su">
-          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:20}}>
-            <button onClick={()=>{setForm({category:"",title:"",content:"",author:"",anonymous:true,secret:false,priority:"normal"});nav("home");}} style={{background:"none",fontSize:20,padding:4}}>←</button>
-            <h2 style={{fontSize:18,fontWeight:700}}>의견 남기기</h2>
+          <div style={UI.titleRow}>
+            <button onClick={()=>{setForm({category:"",title:"",content:"",author:"",anonymous:true,secret:false,priority:"normal"});nav("home");}} aria-label="뒤로" style={UI.iconBtn}><Icon n="arrowleft" s={18}/></button>
+            <h2 style={UI.h2}>의견 남기기</h2>
           </div>
           {/* Secret toggle */}
-          <div style={{...S.card,background:form.secret?"linear-gradient(135deg,#FEF2F2,#FEE2E2)":"white",border:form.secret?"1.5px solid #FECACA":"1px solid #F5F5F4",transition:"all .3s"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontSize:14,fontWeight:600,color:form.secret?"#DC2626":"#1C1917"}}>{form.secret?"🔒 비밀글 모드":"📢 공개글 모드"}</div><div style={{fontSize:11.5,color:form.secret?"#991B1B":"#A8A29E",marginTop:2}}>{form.secret?"임원진만 확인 가능 · 실명 작성 필수":"전체 공개됩니다"}</div></div>
-              <button onClick={()=>{const ns=!form.secret;setForm({...form,secret:ns,anonymous:ns?false:form.anonymous});}} style={{width:52,height:28,borderRadius:14,position:"relative",background:form.secret?"#DC2626":"#D6D3D1",transition:"background .2s"}}><div style={{width:22,height:22,borderRadius:11,background:"white",position:"absolute",top:3,left:form.secret?27:3,transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></button>
+          <div style={{...S.card,background:form.secret?"var(--yd-wine-50)":"#fff",border:form.secret?"1.5px solid var(--yd-wine-200)":"1px solid var(--yd-gray-200)",transition:"all .3s"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+              <div><div style={{display:"flex",alignItems:"center",gap:6,fontSize:14,fontWeight:700,color:form.secret?"var(--yd-wine-700)":"var(--yd-gray-900)"}}>{form.secret?<><Icon n="lock" s={15}/>비밀글 모드</>:<><Icon n="megaphone" s={15}/>공개글 모드</>}</div><div style={{fontSize:11.5,color:form.secret?"var(--yd-wine-800)":"var(--yd-gray-500)",marginTop:2}}>{form.secret?"임원진만 확인 가능 · 실명 작성 필수":"전체 공개됩니다"}</div></div>
+              <button onClick={()=>{const ns=!form.secret;setForm({...form,secret:ns,anonymous:ns?false:form.anonymous});}} style={{width:52,height:28,flex:"none",borderRadius:14,position:"relative",background:form.secret?"var(--yd-wine-600)":"var(--yd-gray-300)",transition:"background .2s"}}><div style={{...UI.knob,left:form.secret?27:3}}/></button>
             </div>
-            {form.secret&&<div style={{marginTop:12,padding:12,background:"rgba(255,255,255,0.7)",borderRadius:12}}><div style={{fontSize:12,fontWeight:600,color:"#991B1B",marginBottom:6}}>✏️ 실명 작성 (임원진에게만 공개)</div><input value={form.author} onChange={e=>setForm({...form,author:e.target.value})} placeholder="이름을 입력해주세요 (필수)" style={{width:"100%",padding:"11px 14px",borderRadius:10,border:"1.5px solid #FECACA",fontSize:14,outline:"none",background:"white"}}/></div>}
+            {form.secret&&<div style={{marginTop:12,padding:12,background:"rgba(255,255,255,0.7)",borderRadius:12}}><div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:600,color:"var(--yd-wine-800)",marginBottom:6}}><Icon n="pencil" s={13}/>실명 작성 (임원진에게만 공개)</div><input className="yd-input" value={form.author} onChange={e=>setForm({...form,author:e.target.value})} placeholder="이름을 입력해주세요 (필수)" style={{fontSize:14,borderColor:"var(--yd-wine-200)"}}/></div>}
           </div>
           {/* Anonymous (public only) */}
           {!form.secret&&<div style={S.card}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontSize:14,fontWeight:600}}>{form.anonymous?"🕶️ 익명으로 제출":"😊 실명으로 제출"}</div><div style={{fontSize:11.5,color:"#A8A29E",marginTop:2}}>{form.anonymous?"이름이 공개되지 않습니다":"이름이 함께 표시됩니다"}</div></div>
-              <button onClick={()=>setForm({...form,anonymous:!form.anonymous})} style={{width:52,height:28,borderRadius:14,position:"relative",background:form.anonymous?"#6366F1":"#D6D3D1",transition:"background .2s"}}><div style={{width:22,height:22,borderRadius:11,background:"white",position:"absolute",top:3,left:form.anonymous?27:3,transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></button>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+              <div><div style={{display:"flex",alignItems:"center",gap:6,fontSize:14,fontWeight:700,color:"var(--yd-gray-900)"}}>{form.anonymous?<><Icon n="eyeoff" s={15}/>익명으로 제출</>:<><Icon n="user" s={15}/>실명으로 제출</>}</div><div style={{fontSize:11.5,color:"var(--yd-gray-500)",marginTop:2}}>{form.anonymous?"이름이 공개되지 않습니다":"이름이 함께 표시됩니다"}</div></div>
+              <button onClick={()=>setForm({...form,anonymous:!form.anonymous})} style={{width:52,height:28,flex:"none",borderRadius:14,position:"relative",background:form.anonymous?"var(--yd-navy-600)":"var(--yd-gray-300)",transition:"background .2s"}}><div style={{...UI.knob,left:form.anonymous?27:3}}/></button>
             </div>
-            {!form.anonymous&&<input value={form.author} onChange={e=>setForm({...form,author:e.target.value})} placeholder="이름을 입력해주세요" style={{width:"100%",marginTop:12,padding:"12px 14px",borderRadius:12,border:"1.5px solid #E7E5E4",fontSize:14,outline:"none"}}/>}
+            {!form.anonymous&&<input className="yd-input" value={form.author} onChange={e=>setForm({...form,author:e.target.value})} placeholder="이름을 입력해주세요" style={{marginTop:12,fontSize:14}}/>}
           </div>}
           {/* Category */}
-          <div style={S.card}><div style={{fontSize:14,fontWeight:600,marginBottom:10}}>카테고리 선택</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{CATEGORIES.map(c=><button key={c.id} onClick={()=>setForm({...form,category:c.id})} style={{padding:"8px 14px",borderRadius:10,fontSize:12.5,fontWeight:500,background:form.category===c.id?c.color:c.bg,color:form.category===c.id?"white":c.color,transition:"all .2s"}}>{c.label}</button>)}</div></div>
+          <div style={S.card}><div style={UI.label}>카테고리 선택</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{CATEGORIES.map(c=><button key={c.id} onClick={()=>setForm({...form,category:c.id})} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 13px",borderRadius:12,fontSize:12.5,fontWeight:600,background:form.category===c.id?c.solid:c.bg,color:form.category===c.id?"#fff":c.color,boxShadow:form.category===c.id?"var(--yd-shadow-sm)":`inset 0 0 0 1px ${c.ring}`,transition:"all .2s"}}><Icon n={c.icon} s={14}/>{c.name}</button>)}</div></div>
           {/* Priority */}
-          <div style={S.card}><div style={{fontSize:14,fontWeight:600,marginBottom:10}}>중요도</div><div style={{display:"flex",gap:8}}>{PRIORITY.map(p=><button key={p.id} onClick={()=>setForm({...form,priority:p.id})} style={{flex:1,padding:10,borderRadius:10,fontSize:13,fontWeight:500,background:form.priority===p.id?p.color:"#F5F5F4",color:form.priority===p.id?"white":"#78716C"}}>{p.label}</button>)}</div></div>
+          <div style={S.card}><div style={UI.label}>중요도</div><div style={{display:"flex",gap:8}}>{PRIORITY.map(p=><button key={p.id} onClick={()=>setForm({...form,priority:p.id})} style={{flex:1,padding:10,borderRadius:12,fontSize:13,fontWeight:600,background:form.priority===p.id?p.solid:"var(--yd-gray-100)",color:form.priority===p.id?"#fff":"var(--yd-gray-600)"}}>{p.label}</button>)}</div></div>
           {/* Title & Content */}
           <div style={S.card}>
-            <input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="제목을 입력해주세요" maxLength={100} style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1.5px solid #E7E5E4",fontSize:15,fontWeight:600,outline:"none",marginBottom:10}}/>
-            <div style={{position:"relative"}}><textarea value={form.content} onChange={e=>setForm({...form,content:e.target.value})} placeholder={form.secret?"비밀 의견을 자유롭게 작성해주세요...\n(임원진만 확인 가능합니다)":"의견을 자유롭게 작성해주세요..."} maxLength={1000} rows={6} style={{width:"100%",padding:"12px 14px",borderRadius:12,border:"1.5px solid #E7E5E4",fontSize:14,outline:"none",lineHeight:1.6}}/><div style={{position:"absolute",bottom:8,right:12,fontSize:11,color:"#A8A29E"}}>{form.content.length}/1000</div></div>
+            <input className="yd-input" value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="제목을 입력해주세요" maxLength={100} style={{fontSize:15,fontWeight:600,marginBottom:10}}/>
+            <div style={{position:"relative"}}><textarea className="yd-input" value={form.content} onChange={e=>setForm({...form,content:e.target.value})} placeholder={form.secret?"비밀 의견을 자유롭게 작성해주세요...\n(임원진만 확인 가능합니다)":"의견을 자유롭게 작성해주세요..."} maxLength={1000} rows={6} style={{fontSize:14,lineHeight:1.6}}/><div className="yd-tabular" style={{position:"absolute",bottom:8,right:12,fontSize:11,color:"var(--yd-gray-400)"}}>{form.content.length}/1000</div></div>
           </div>
-          <button onClick={doSubmit} disabled={submitting} style={{width:"100%",padding:16,borderRadius:16,background:submitting?"#A8A29E":(form.category&&form.title&&form.content&&(!form.secret||form.author))?(form.secret?"linear-gradient(135deg,#DC2626,#EF4444)":"linear-gradient(135deg,#6366F1,#8B5CF6)"):"#D6D3D1",color:"white",fontSize:16,fontWeight:700,boxShadow:(!submitting&&form.category&&form.title&&form.content)?`0 8px 24px ${form.secret?"rgba(220,38,38,0.3)":"rgba(99,102,241,0.3)"}`:"none",opacity:submitting?0.7:1}}>{submitting?"제출 중...":(form.secret?"🔒 비밀글 제출하기":"📮 의견 제출하기")}</button>
+          <button onClick={doSubmit} disabled={submitting} style={{width:"100%",padding:16,borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8,background:submitting?"var(--yd-gray-400)":ready?(form.secret?"var(--yd-wine-600)":"var(--yd-navy-600)"):"var(--yd-gray-200)",color:(submitting||ready)?"#fff":"var(--yd-gray-500)",fontSize:16,fontWeight:700,boxShadow:(!submitting&&ready)?"var(--yd-shadow-md)":"none",opacity:submitting?0.7:1}}>{submitting?"제출 중...":(form.secret?<><Icon n="lock" s={17}/>비밀글 제출하기</>:<><Icon n="send" s={17}/>의견 제출하기</>)}</button>
         </div>}
 
         {/* ═══ LIST ═══ */}
         {page==="list"&&<div className="su">
-          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:16}}>
-            <button onClick={()=>nav("home")} style={{background:"none",fontSize:20,padding:4}}>←</button>
-            <h2 style={{fontSize:18,fontWeight:700}}>전체 의견</h2>
-            <span style={{fontSize:13,color:"#A8A29E",fontWeight:500}}>{filtered.length}건</span>
+          <div style={{...UI.titleRow,marginBottom:16}}>
+            <button onClick={()=>nav("home")} aria-label="뒤로" style={UI.iconBtn}><Icon n="arrowleft" s={18}/></button>
+            <h2 style={UI.h2}>전체 의견</h2>
+            <span style={UI.count}>{filtered.length}건</span>
             {/* Refresh */}
-            <button onClick={load} style={{marginLeft:"auto",background:"none",fontSize:16,padding:4}} title="새로고침">🔄</button>
+            <button onClick={load} style={{...UI.iconBtn,marginLeft:"auto"}} title="새로고침" aria-label="새로고침"><Icon n="refresh" s={17}/></button>
           </div>
-          {isAdmin&&<div style={{display:"flex",gap:6,marginBottom:10}}>{[{id:"all",l:"📋 전체",c:"#1C1917"},{id:"public",l:"📢 공개글",c:"#6366F1"},{id:"secret",l:"🔒 비밀글",c:"#DC2626"}].map(v=><button key={v.id} onClick={()=>setFilterVis(v.id)} style={{padding:"7px 14px",borderRadius:10,fontSize:12,fontWeight:500,background:filterVis===v.id?v.c:"#F5F5F4",color:filterVis===v.id?"white":"#78716C",whiteSpace:"nowrap"}}>{v.l}</button>)}</div>}
+          {isAdmin&&<div style={{display:"flex",gap:6,marginBottom:10}}>{[{id:"all",l:"전체",i:"list",c:"var(--yd-navy-900)"},{id:"public",l:"공개글",i:"megaphone",c:"var(--yd-blue-600)"},{id:"secret",l:"비밀글",i:"lock",c:"var(--yd-wine-600)"}].map(v=><button key={v.id} onClick={()=>setFilterVis(v.id)} style={{...UI.filter,background:filterVis===v.id?v.c:"var(--yd-gray-100)",color:filterVis===v.id?"#fff":"var(--yd-gray-600)"}}><Icon n={v.i} s={13}/>{v.l}</button>)}</div>}
           <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:12}}>
-            <button onClick={()=>setFilterCat("all")} style={{padding:"7px 14px",borderRadius:10,fontSize:12,fontWeight:500,background:filterCat==="all"?"#1C1917":"#F5F5F4",color:filterCat==="all"?"white":"#78716C",whiteSpace:"nowrap",flexShrink:0}}>전체</button>
-            {CATEGORIES.map(c=><button key={c.id} onClick={()=>setFilterCat(c.id)} style={{padding:"7px 14px",borderRadius:10,fontSize:12,fontWeight:500,background:filterCat===c.id?c.color:c.bg,color:filterCat===c.id?"white":c.color,whiteSpace:"nowrap",flexShrink:0}}>{c.label}</button>)}
+            <button onClick={()=>setFilterCat("all")} style={{...UI.filter,background:filterCat==="all"?"var(--yd-navy-900)":"var(--yd-gray-100)",color:filterCat==="all"?"#fff":"var(--yd-gray-600)",flexShrink:0}}>전체</button>
+            {CATEGORIES.map(c=><button key={c.id} onClick={()=>setFilterCat(c.id)} style={{...UI.filter,background:filterCat===c.id?c.solid:c.bg,color:filterCat===c.id?"#fff":c.color,boxShadow:filterCat===c.id?"none":`inset 0 0 0 1px ${c.ring}`,flexShrink:0}}><Icon n={c.icon} s={13}/>{c.name}</button>)}
           </div>
-          {filtered.length===0?<div style={{textAlign:"center",padding:40,color:"#A8A29E"}}><div style={{fontSize:40,marginBottom:12}}>📭</div><div style={{fontSize:14,fontWeight:500}}>해당하는 의견이 없습니다</div></div>:filtered.map(o=><OpinionCard key={o.id} opinion={o} onClick={()=>nav("detail",o)} isAdmin={isAdmin}/>)}
+          {filtered.length===0?<div style={UI.empty}><div style={{marginBottom:12,color:"var(--yd-gray-300)"}}><Icon n="inbox" s={40}/></div><div style={{fontSize:14,fontWeight:500}}>해당하는 의견이 없습니다</div></div>:filtered.map(o=><OpinionCard key={o.id} opinion={o} onClick={()=>nav("detail",o)} isAdmin={isAdmin}/>)}
         </div>}
 
         {/* ═══ DETAIL ═══ */}
         {page==="detail"&&selected&&<div className="su">
-          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:16}}>
-            <button onClick={()=>nav("list")} style={{background:"none",fontSize:20,padding:4}}>←</button>
-            <h2 style={{fontSize:18,fontWeight:700}}>의견 상세</h2>
+          <div style={{...UI.titleRow,marginBottom:16}}>
+            <button onClick={()=>nav("list")} aria-label="뒤로" style={UI.iconBtn}><Icon n="arrowleft" s={18}/></button>
+            <h2 style={UI.h2}>의견 상세</h2>
           </div>
           {(()=>{const cat=CATEGORIES.find(c=>c.id===selected.category)||CATEGORIES[5];const st=STATUS_MAP[selected.status]||STATUS_MAP.new;return(<>
-            <div style={{background:selected.secret?"#FFFBFB":"white",borderRadius:20,padding:20,marginBottom:16,border:selected.secret?"1px solid #FECACA":"1px solid #F5F5F4",boxShadow:"0 2px 12px rgba(0,0,0,0.06)",borderTop:`4px solid ${selected.secret?"#DC2626":cat.color}`}}>
+            <div style={{background:selected.secret?"var(--yd-wine-50)":"#fff",borderRadius:20,padding:20,marginBottom:16,border:selected.secret?"1px solid var(--yd-wine-200)":"1px solid var(--yd-gray-200)",boxShadow:"var(--yd-shadow-md)",borderTop:`4px solid ${selected.secret?"var(--yd-wine-600)":cat.solid}`}}>
               <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
-                {selected.secret&&<span style={{fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"#FEE2E2",color:"#DC2626"}}>🔒 비밀글</span>}
-                <span style={{fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:8,background:cat.bg,color:cat.color}}>{cat.label}</span>
-                <span style={{fontSize:11,fontWeight:500,padding:"4px 10px",borderRadius:8,background:st.bg,color:st.color}}>{st.label}</span>
-                {selected.priority!=="normal"&&<span style={{fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:8,background:selected.priority==="urgent"?"#FEE2E2":"#FEF3C7",color:PRIORITY.find(p=>p.id===selected.priority)?.color}}>{PRIORITY.find(p=>p.id===selected.priority)?.label}</span>}
+                {selected.secret&&<span style={{...chip(SECRET_CHIP,true),fontWeight:700}}><Icon n="lock" s={11}/>비밀글</span>}
+                <span style={chip(cat,true)}><Icon n={cat.icon} s={12}/>{cat.name}</span>
+                <span style={chip(st,true)}>{st.label}</span>
+                {selected.priority!=="normal"&&<span style={chip(PRIORITY.find(p=>p.id===selected.priority)||{},true)}>{PRIORITY.find(p=>p.id===selected.priority)?.label}</span>}
               </div>
-              <h3 style={{fontSize:18,fontWeight:700,color:"#1C1917",marginBottom:12,lineHeight:1.4}}>{selected.title}</h3>
-              <p style={{fontSize:14,color:"#44403C",lineHeight:1.7,marginBottom:16,whiteSpace:"pre-wrap"}}>{selected.content}</p>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:12,borderTop:"1px solid #F5F5F4"}}>
-                <div style={{fontSize:12,color:"#A8A29E"}}>{selected.secret?(isAdmin?`🔒 ${selected.author} (비밀글)`:"🔒 비밀글"):(selected.anonymous?"🕶️ 익명":`😊 ${selected.author}`)} · {fmtDate(selected.created_at)}</div>
-                {!selected.secret&&<button onClick={()=>doLike(selected.id)} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:10,background:likedIds[selected.id]?"#FEE2E2":"#FEF2F2",fontSize:13,fontWeight:600,color:"#EF4444",opacity:likedIds[selected.id]?0.6:1}}>❤️ {selected.likes}</button>}
+              <h3 style={{fontSize:18,fontWeight:700,color:"var(--yd-gray-900)",marginBottom:12,lineHeight:1.4}}>{selected.title}</h3>
+              <p style={{fontSize:14,color:"var(--yd-gray-700)",lineHeight:1.7,marginBottom:16,whiteSpace:"pre-wrap"}}>{selected.content}</p>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,paddingTop:12,borderTop:selected.secret?"1px solid var(--yd-wine-100)":"1px solid var(--yd-gray-100)"}}>
+                <div style={{fontSize:12,color:"var(--yd-gray-500)"}}>{selected.secret?(isAdmin?<><Icon n="lock" s={13}/> {selected.author} (비밀글)</>:<><Icon n="lock" s={13}/> 비밀글</>):(selected.anonymous?<><Icon n="eyeoff" s={13}/> 익명</>:<><Icon n="user" s={13}/> {selected.author}</>)} · {fmtDate(selected.created_at)}</div>
+                {!selected.secret&&<button onClick={()=>doLike(selected.id)} className="yd-tabular" style={{display:"flex",alignItems:"center",gap:6,flex:"none",padding:"8px 14px",borderRadius:12,background:likedIds[selected.id]?"var(--yd-red-100)":"var(--yd-red-50)",boxShadow:"inset 0 0 0 1px var(--yd-red-200)",fontSize:13,fontWeight:700,color:"var(--yd-red-600)",opacity:likedIds[selected.id]?0.6:1}}><Icon n="heart" s={15} c="var(--yd-red-500)" fill/>{selected.likes}</button>}
               </div>
             </div>
             {/* Reply display */}
-            {selected.reply&&<div style={{background:"linear-gradient(135deg,#ECFDF5,#D1FAE5)",borderRadius:16,padding:16,marginBottom:16,border:"1px solid #A7F3D0"}}>
+            {selected.reply&&<div style={{background:"var(--yd-green-50)",borderRadius:16,padding:16,marginBottom:16,border:"1px solid var(--yd-green-200)"}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                <div style={{width:28,height:28,borderRadius:8,background:"#10B981",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>💬</div>
-                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:"#065F46"}}>임원진</div><div style={{fontSize:10,color:"#047857"}}>{selected.reply_date||""}</div></div>
-                {isAdmin&&!editingReply&&<div style={{display:"flex",gap:6}}>
-                  <button onClick={()=>{setEditingReply(true);setReplyText(selected.reply);}} style={{padding:"5px 12px",borderRadius:8,fontSize:11.5,fontWeight:600,background:"white",color:"#059669",border:"1px solid #A7F3D0"}}>✏️ 수정</button>
-                  <button onClick={()=>doRemoveReply(selected.id)} style={{padding:"5px 12px",borderRadius:8,fontSize:11.5,fontWeight:600,background:"white",color:"#DC2626",border:"1px solid #FECACA"}}>삭제</button>
+                <div style={{width:28,height:28,flex:"none",borderRadius:8,background:"var(--yd-green-600)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><Icon n="message" s={15}/></div>
+                <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:700,color:"var(--yd-green-700)"}}>임원진</div><div className="yd-tabular" style={{fontSize:10.5,color:"var(--yd-green-600)"}}>{selected.reply_date||""}</div></div>
+                {isAdmin&&!editingReply&&<div style={{display:"flex",gap:6,flex:"none"}}>
+                  <button onClick={()=>{setEditingReply(true);setReplyText(selected.reply);}} style={{...UI.mini,color:"var(--yd-green-700)",border:"1px solid var(--yd-green-200)"}}><Icon n="pencil" s={12}/>수정</button>
+                  <button onClick={()=>doRemoveReply(selected.id)} style={{...UI.mini,color:"var(--yd-red-700)",border:"1px solid var(--yd-red-200)"}}>삭제</button>
                 </div>}
               </div>
-              {!editingReply?<div style={{fontSize:13.5,color:"#065F46",lineHeight:1.7,paddingLeft:36,whiteSpace:"pre-wrap"}}>{selected.reply}</div>
+              {!editingReply?<div style={{fontSize:13.5,color:"var(--yd-gray-800)",lineHeight:1.7,paddingLeft:36,whiteSpace:"pre-wrap"}}>{selected.reply}</div>
               :<div style={{marginTop:4}}>
-                <textarea value={replyText} onChange={e=>setReplyText(e.target.value)} rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #A7F3D0",fontSize:13,outline:"none",lineHeight:1.5,marginBottom:8,background:"white"}}/>
+                <textarea className="yd-input" value={replyText} onChange={e=>setReplyText(e.target.value)} rows={3} style={{fontSize:13,lineHeight:1.5,marginBottom:8,borderColor:"var(--yd-green-200)"}}/>
                 <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{if(replyText.trim())doReply(selected.id,replyText);}} style={{padding:"8px 16px",borderRadius:10,background:replyText.trim()?"#10B981":"#D6D3D1",color:"white",fontSize:13,fontWeight:600}}>수정 완료</button>
-                  <button onClick={()=>{setEditingReply(false);setReplyText("");}} style={{padding:"8px 16px",borderRadius:10,background:"#F5F5F4",color:"#78716C",fontSize:13,fontWeight:500}}>취소</button>
+                  <button onClick={()=>{if(replyText.trim())doReply(selected.id,replyText);}} style={{padding:"8px 16px",borderRadius:12,background:replyText.trim()?"var(--yd-green-600)":"var(--yd-gray-300)",color:"#fff",fontSize:13,fontWeight:600}}>수정 완료</button>
+                  <button onClick={()=>{setEditingReply(false);setReplyText("");}} style={{padding:"8px 16px",borderRadius:12,background:"var(--yd-gray-100)",color:"var(--yd-gray-600)",fontSize:13,fontWeight:500}}>취소</button>
                 </div>
               </div>}
             </div>}
             {/* Admin tools */}
             {isAdmin&&<div style={S.card}>
-              <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>⚙️ 임원진 관리</div>
-              {selected.secret&&<div style={{background:"#FEF2F2",borderRadius:10,padding:12,marginBottom:12,border:"1px solid #FECACA"}}><div style={{fontSize:12,fontWeight:600,color:"#991B1B",marginBottom:4}}>🔒 비밀글 작성자</div><div style={{fontSize:14,fontWeight:700,color:"#DC2626"}}>{selected.author}</div></div>}
-              <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>{Object.entries(STATUS_MAP).map(([k,v])=><button key={k} onClick={()=>doStatus(selected.id,k)} style={{padding:"6px 12px",borderRadius:8,fontSize:11.5,fontWeight:500,background:selected.status===k?v.color:v.bg,color:selected.status===k?"white":v.color}}>{v.label}</button>)}</div>
-              {!selected.reply&&<><div style={{fontSize:12,fontWeight:600,color:"#78716C",marginBottom:6}}>💬 임원진 답변 작성</div><textarea value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 작성해주세요..." rows={3} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #E7E5E4",fontSize:13,outline:"none",lineHeight:1.5,marginBottom:8}}/><button onClick={()=>{if(replyText.trim()){doReply(selected.id,replyText);setReplyText("");}}} style={{padding:"10px 16px",borderRadius:10,background:replyText.trim()?"#10B981":"#D6D3D1",color:"white",fontSize:13,fontWeight:600}}>임원진 답변 등록</button></>}
-              <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid #F5F5F4"}}>
-                {!showDel?<button onClick={()=>setShowDel(true)} style={{padding:"8px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#FEF2F2",color:"#DC2626",border:"1px solid #FECACA"}}>🗑️ 휴지통으로 이동</button>
-                :<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:12,color:"#DC2626",fontWeight:500}}>휴지통으로 옮기시겠습니까?</span><button onClick={()=>doDel(selected.id)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,background:"#DC2626",color:"white"}}>이동</button><button onClick={()=>setShowDel(false)} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:500,background:"#F5F5F4",color:"#78716C"}}>취소</button></div>}
-                <div style={{fontSize:11,color:"#A8A29E",marginTop:8}}>* 삭제해도 휴지통에서 복구할 수 있습니다</div>
+              <div style={UI.cardTitle}><span className="yd-headicon"><Icon n="settings" s={15}/></span>임원진 관리</div>
+              {selected.secret&&<div style={{background:"var(--yd-wine-50)",borderRadius:12,padding:12,marginBottom:12,border:"1px solid var(--yd-wine-200)"}}><div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:600,color:"var(--yd-wine-800)",marginBottom:4}}><Icon n="lock" s={12}/>비밀글 작성자</div><div style={{fontSize:14,fontWeight:700,color:"var(--yd-wine-600)"}}>{selected.author}</div></div>}
+              <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>{Object.entries(STATUS_MAP).map(([k,v])=><button key={k} onClick={()=>doStatus(selected.id,k)} style={{padding:"6px 12px",borderRadius:999,fontSize:11.5,fontWeight:600,background:selected.status===k?v.color:v.bg,color:selected.status===k?"#fff":v.color,boxShadow:selected.status===k?"none":`inset 0 0 0 1px ${v.ring}`}}>{v.label}</button>)}</div>
+              {!selected.reply&&<><div style={{display:"flex",alignItems:"center",gap:5,fontSize:12,fontWeight:600,color:"var(--yd-gray-600)",marginBottom:6}}><Icon n="message" s={13}/>임원진 답변 작성</div><textarea className="yd-input" value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="답변을 작성해주세요..." rows={3} style={{fontSize:13,lineHeight:1.5,marginBottom:8}}/><button onClick={()=>{if(replyText.trim()){doReply(selected.id,replyText);setReplyText("");}}} style={{padding:"10px 16px",borderRadius:12,background:replyText.trim()?"var(--yd-green-600)":"var(--yd-gray-300)",color:"#fff",fontSize:13,fontWeight:600}}>임원진 답변 등록</button></>}
+              <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid var(--yd-gray-100)"}}>
+                {!showDel?<button onClick={()=>setShowDel(true)} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"8px 14px",borderRadius:10,fontSize:12,fontWeight:600,background:"var(--yd-red-50)",color:"var(--yd-red-700)",border:"1px solid var(--yd-red-200)"}}><Icon n="trash" s={13}/>휴지통으로 이동</button>
+                :<div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}><span style={{fontSize:12,color:"var(--yd-red-700)",fontWeight:600}}>휴지통으로 옮기시겠습니까?</span><button onClick={()=>doDel(selected.id)} style={{padding:"6px 14px",borderRadius:10,fontSize:12,fontWeight:600,background:"var(--yd-red-600)",color:"#fff"}}>이동</button><button onClick={()=>setShowDel(false)} style={{padding:"6px 14px",borderRadius:10,fontSize:12,fontWeight:500,background:"var(--yd-gray-100)",color:"var(--yd-gray-600)"}}>취소</button></div>}
+                <div style={{fontSize:11,color:"var(--yd-gray-500)",marginTop:8}}>* 삭제해도 휴지통에서 복구할 수 있습니다</div>
               </div>
             </div>}
           </>);})()}
@@ -384,62 +436,62 @@ export default function App() {
 
         {/* ═══ ADMIN ═══ */}
         {page==="admin"&&isAdmin&&<div className="su">
-          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:20}}>
-            <button onClick={()=>nav("home")} style={{background:"none",fontSize:20,padding:4}}>←</button>
-            <h2 style={{fontSize:18,fontWeight:700}}>임원진 대시보드</h2>
-            <button onClick={load} style={{marginLeft:"auto",background:"none",fontSize:16,padding:4}}>🔄</button>
+          <div style={UI.titleRow}>
+            <button onClick={()=>nav("home")} aria-label="뒤로" style={UI.iconBtn}><Icon n="arrowleft" s={18}/></button>
+            <h2 style={UI.h2}>임원진 대시보드</h2>
+            <button onClick={load} style={{...UI.iconBtn,marginLeft:"auto"}} aria-label="새로고침"><Icon n="refresh" s={17}/></button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
-            {[{l:"전체",v:stats.total,i:"📊",c:"#6366F1"},{l:"미확인",v:stats.new_,i:"🔔",c:"#F59E0B"},{l:"답변완료",v:stats.replied,i:"✅",c:"#10B981"},{l:"공개글",v:stats.pub,i:"📢",c:"#8B5CF6"},{l:"비밀글",v:stats.secret,i:"🔒",c:"#DC2626"},{l:"좋아요",v:opinions.reduce((a,o)=>a+o.likes,0),i:"❤️",c:"#EF4444"}].map((s,i)=>
-              <div key={i} style={{background:"white",borderRadius:14,padding:"14px 10px",textAlign:"center",border:"1px solid #F5F5F4",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}><div style={{fontSize:18,marginBottom:2}}>{s.i}</div><div style={{fontSize:22,fontWeight:800,color:s.c,fontFamily:"'Outfit',sans-serif"}}>{s.v}</div><div style={{fontSize:10,color:"#78716C",marginTop:1}}>{s.l}</div></div>
+          <div className="yd-card-navy" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:12,marginBottom:16}}>
+            {[{l:"전체",v:stats.total,i:"messages",c:"var(--yd-navy-200)"},{l:"미확인",v:stats.new_,i:"bell",c:"var(--yd-gold-300)"},{l:"답변완료",v:stats.replied,i:"checkcircle",c:"var(--yd-green-200)"},{l:"공개글",v:stats.pub,i:"megaphone",c:"var(--yd-blue-200)"},{l:"비밀글",v:stats.secret,i:"lock",c:"var(--yd-wine-300)"},{l:"좋아요",v:opinions.reduce((a,o)=>a+o.likes,0),i:"heart",c:"var(--yd-red-300)"}].map((s,i)=>
+              <div key={i} style={{background:"rgba(255,255,255,0.06)",borderRadius:14,padding:"12px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,0.10)"}}><div style={{marginBottom:4,color:s.c,lineHeight:1}}><Icon n={s.i} s={18}/></div><div className="yd-tabular" style={{fontSize:22,fontWeight:800,lineHeight:1.2,color:"#fff"}}>{s.v}</div><div style={{fontSize:10.5,color:"rgba(255,255,255,0.72)",marginTop:1}}>{s.l}</div></div>
             )}
           </div>
-          <button onClick={()=>exportToExcel(opinions)} style={{width:"100%",padding:14,borderRadius:14,marginBottom:12,background:"linear-gradient(135deg,#059669,#10B981)",color:"white",fontSize:14,fontWeight:700,boxShadow:"0 6px 20px rgba(16,185,129,0.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>📥 엑셀(CSV) 다운로드</button>
-          <button onClick={()=>{loadTrash();nav("trash");}} style={{width:"100%",padding:14,borderRadius:14,marginBottom:16,background:"white",color:"#78716C",fontSize:14,fontWeight:700,border:"1px solid #E7E5E4",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🗑️ 휴지통 (삭제된 의견 복구)</button>
+          <button onClick={()=>exportToExcel(opinions)} className="yd-btn yd-btn-ok" style={{width:"100%",padding:14,marginBottom:12,fontSize:14,fontWeight:700,boxShadow:"var(--yd-shadow-md)"}}><Icon n="download" s={17}/>엑셀(CSV) 다운로드</button>
+          <button onClick={()=>{loadTrash();nav("trash");}} className="yd-btn yd-btn-ghost" style={{width:"100%",padding:14,marginBottom:16,fontSize:14,fontWeight:700}}><Icon n="trash" s={17}/>휴지통 (삭제된 의견 복구)</button>
           {/* Category chart */}
-          <div style={{...S.card,marginBottom:16}}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>📈 카테고리별 현황</div>
+          <div style={{...S.card,marginBottom:16}}><div style={UI.cardTitle}><span className="yd-headicon navy"><Icon n="chart" s={15}/></span>카테고리별 현황</div>
             {CATEGORIES.map(c=>{const cnt=opinions.filter(o=>o.category===c.id).length;const mx=Math.max(...CATEGORIES.map(cc=>opinions.filter(o=>o.category===cc.id).length),1);return(
-              <div key={c.id} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}><span style={{fontWeight:500,color:"#44403C"}}>{c.label}</span><span style={{fontWeight:700,color:c.color}}>{cnt}건</span></div><div style={{height:8,background:"#F5F5F4",borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${cnt?((cnt/mx)*100):0}%`,background:c.color,borderRadius:4,transition:"width .5s"}}/></div></div>
+              <div key={c.id} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,marginBottom:4}}><span style={{display:"inline-flex",alignItems:"center",gap:6,fontWeight:500,color:"var(--yd-gray-700)"}}><Icon n={c.icon} s={13} c={c.color}/>{c.name}</span><span className="yd-tabular" style={{fontWeight:700,color:c.color}}>{cnt}건</span></div><div style={{height:8,background:"var(--yd-gray-100)",borderRadius:999,overflow:"hidden"}}><div style={{height:"100%",width:`${cnt?((cnt/mx)*100):0}%`,background:c.solid,borderRadius:999,transition:"width .5s"}}/></div></div>
             );})}
           </div>
           {/* Secret posts */}
-          <div style={{...S.card,border:"1px solid #FECACA",marginBottom:16}}><div style={{fontSize:14,fontWeight:700,color:"#DC2626",marginBottom:12}}>🔒 비밀글 목록</div>
-            {opinions.filter(o=>o.secret).length===0?<div style={{textAlign:"center",padding:16,color:"#A8A29E",fontSize:13}}>비밀글이 없습니다</div>
-            :opinions.filter(o=>o.secret).map(o=><div key={o.id} onClick={()=>nav("detail",o)} style={{padding:12,background:"#FFFBFB",borderRadius:12,marginBottom:8,border:"1px solid #FECACA",cursor:"pointer"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:13,fontWeight:600,color:"#1C1917"}}>{o.title}</div><div style={{fontSize:11,color:"#991B1B",marginTop:2}}>작성자: <strong>{o.author}</strong> · {fmtDate(o.created_at)}</div></div><span style={{fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:6,background:(STATUS_MAP[o.status]||STATUS_MAP.new).bg,color:(STATUS_MAP[o.status]||STATUS_MAP.new).color}}>{(STATUS_MAP[o.status]||STATUS_MAP.new).label}</span></div></div>)}
+          <div style={{...S.card,border:"1px solid var(--yd-wine-200)",marginBottom:16}}><div style={{...UI.cardTitle,color:"var(--yd-wine-700)"}}><span className="yd-headicon wine"><Icon n="lock" s={15}/></span>비밀글 목록</div>
+            {opinions.filter(o=>o.secret).length===0?<div style={{textAlign:"center",padding:16,color:"var(--yd-gray-500)",fontSize:13}}>비밀글이 없습니다</div>
+            :opinions.filter(o=>o.secret).map(o=><div key={o.id} onClick={()=>nav("detail",o)} style={{padding:12,background:"var(--yd-wine-50)",borderRadius:12,marginBottom:8,border:"1px solid var(--yd-wine-200)",cursor:"pointer"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}><div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:600,color:"var(--yd-gray-900)"}}>{o.title}</div><div style={{fontSize:11,color:"var(--yd-wine-800)",marginTop:2}}>작성자: <strong>{o.author}</strong> · {fmtDate(o.created_at)}</div></div><span style={{...chip(STATUS_MAP[o.status]||STATUS_MAP.new),flex:"none"}}>{(STATUS_MAP[o.status]||STATUS_MAP.new).label}</span></div></div>)}
           </div>
           {/* Pending */}
-          <div style={S.card}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>🔔 미확인 의견</div>
-            {opinions.filter(o=>o.status==="new").length===0?<div style={{textAlign:"center",padding:16,color:"#A8A29E",fontSize:13}}>✅ 모든 의견을 확인했습니다</div>
+          <div style={S.card}><div style={UI.cardTitle}><span className="yd-headicon"><Icon n="bell" s={15}/></span>미확인 의견</div>
+            {opinions.filter(o=>o.status==="new").length===0?<div style={{textAlign:"center",padding:16,color:"var(--yd-gray-500)",fontSize:13}}><Icon n="checkcircle" s={14} c="var(--yd-green-600)"/> 모든 의견을 확인했습니다</div>
             :opinions.filter(o=>o.status==="new").map(o=><OpinionCard key={o.id} opinion={o} onClick={()=>nav("detail",o)} compact isAdmin={isAdmin}/>)}
           </div>
         </div>}
 
         {/* ═══ TRASH ═══ */}
         {page==="trash"&&isAdmin&&<div className="su">
-          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:16,marginBottom:16}}>
-            <button onClick={()=>nav("admin")} style={{background:"none",fontSize:20,padding:4}}>←</button>
-            <h2 style={{fontSize:18,fontWeight:700}}>🗑️ 휴지통</h2>
-            <span style={{fontSize:13,color:"#A8A29E",fontWeight:500}}>{trash.length}건</span>
-            <button onClick={loadTrash} style={{marginLeft:"auto",background:"none",fontSize:16,padding:4}}>🔄</button>
+          <div style={{...UI.titleRow,marginBottom:16}}>
+            <button onClick={()=>nav("admin")} aria-label="뒤로" style={UI.iconBtn}><Icon n="arrowleft" s={18}/></button>
+            <h2 style={{...UI.h2,display:"flex",alignItems:"center",gap:6}}><Icon n="trash" s={19}/>휴지통</h2>
+            <span style={UI.count}>{trash.length}건</span>
+            <button onClick={loadTrash} style={{...UI.iconBtn,marginLeft:"auto"}} aria-label="새로고침"><Icon n="refresh" s={17}/></button>
           </div>
-          <div style={{background:"#FFFBEB",borderRadius:14,padding:14,marginBottom:16,border:"1px solid #FDE68A"}}>
-            <div style={{fontSize:12.5,color:"#92400E",lineHeight:1.6}}>삭제된 의견이 보관되는 공간입니다. <strong>복구</strong>하면 다시 목록에 표시되고, <strong>영구 삭제</strong>하면 완전히 사라집니다.</div>
+          <div style={{background:"var(--yd-gold-50)",borderRadius:14,padding:14,marginBottom:16,border:"1px solid var(--yd-gold-200)"}}>
+            <div style={{fontSize:12.5,color:"var(--yd-gold-900)",lineHeight:1.6}}>삭제된 의견이 보관되는 공간입니다. <strong>복구</strong>하면 다시 목록에 표시되고, <strong>영구 삭제</strong>하면 완전히 사라집니다.</div>
           </div>
-          {trash.length===0?<div style={{textAlign:"center",padding:40,color:"#A8A29E"}}><div style={{fontSize:48,marginBottom:12}}>🗑️</div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>휴지통이 비어 있습니다</div><div style={{fontSize:13}}>삭제된 의견이 없습니다</div></div>
+          {trash.length===0?<div style={UI.empty}><div style={{marginBottom:12,color:"var(--yd-gray-300)"}}><Icon n="trash" s={48}/></div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>휴지통이 비어 있습니다</div><div style={{fontSize:13}}>삭제된 의견이 없습니다</div></div>
           :trash.map(o=>{const cat=CATEGORIES.find(c=>c.id===o.category)||CATEGORIES[5];return(
-            <div key={o.id} style={{background:"white",borderRadius:16,padding:"16px 18px",marginBottom:10,border:"1px solid #F5F5F4",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",borderLeft:`3px solid ${cat.color}`,opacity:0.85}}>
+            <div key={o.id} style={{background:"#fff",borderRadius:16,padding:"16px 18px",marginBottom:10,border:"1px solid var(--yd-gray-200)",boxShadow:"var(--yd-shadow-sm)",borderLeft:`3px solid ${cat.solid}`,opacity:0.85}}>
               <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
-                {o.secret&&<span style={{fontSize:10.5,fontWeight:700,padding:"2px 8px",borderRadius:6,background:"#FEE2E2",color:"#DC2626"}}>🔒 비밀글</span>}
-                <span style={{fontSize:10.5,fontWeight:600,padding:"2px 8px",borderRadius:6,background:cat.bg,color:cat.color}}>{cat.label}</span>
+                {o.secret&&<span style={{...chip(SECRET_CHIP),fontWeight:700}}><Icon n="lock" s={10}/>비밀글</span>}
+                <span style={chip(cat)}><Icon n={cat.icon} s={11}/>{cat.name}</span>
               </div>
-              <div style={{fontSize:14,fontWeight:600,color:"#1C1917",marginBottom:4}}>{o.title}</div>
-              <div style={{fontSize:12.5,color:"#78716C",lineHeight:1.5,marginBottom:8,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{o.content}</div>
-              <div style={{fontSize:11,color:"#A8A29E",marginBottom:10}}>
-                {o.secret?`🔒 ${o.author}`:(o.anonymous?"🕶️ 익명":`😊 ${o.author}`)} · 작성 {fmtDate(o.created_at)} · 삭제 {fmtDate(o.deleted_at)}
+              <div style={{fontSize:14,fontWeight:600,color:"var(--yd-gray-900)",marginBottom:4}}>{o.title}</div>
+              <div style={{fontSize:12.5,color:"var(--yd-gray-600)",lineHeight:1.5,marginBottom:8,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{o.content}</div>
+              <div style={{fontSize:11,color:"var(--yd-gray-500)",marginBottom:10}}>
+                {o.secret?<><Icon n="lock" s={12}/> {o.author}</>:(o.anonymous?<><Icon n="eyeoff" s={12}/> 익명</>:<><Icon n="user" s={12}/> {o.author}</>)} · 작성 {fmtDate(o.created_at)} · 삭제 {fmtDate(o.deleted_at)}
               </div>
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>doRestore(o.id)} style={{flex:1,padding:"10px",borderRadius:10,background:"linear-gradient(135deg,#6366F1,#8B5CF6)",color:"white",fontSize:13,fontWeight:600}}>♻️ 복구하기</button>
-                <button onClick={()=>{if(window.confirm("정말 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다."))doPermanentDel(o.id);}} style={{padding:"10px 16px",borderRadius:10,background:"#FEF2F2",color:"#DC2626",fontSize:13,fontWeight:600,border:"1px solid #FECACA"}}>영구 삭제</button>
+                <button onClick={()=>doRestore(o.id)} className="yd-btn yd-btn-primary" style={{flex:1,gap:6,padding:"10px",borderRadius:12,fontSize:13}}><Icon n="undo" s={14}/>복구하기</button>
+                <button onClick={()=>{if(window.confirm("정말 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다."))doPermanentDel(o.id);}} className="yd-btn yd-btn-danger" style={{padding:"10px 16px",borderRadius:12,fontSize:13}}>영구 삭제</button>
               </div>
             </div>
           );})}
@@ -447,11 +499,11 @@ export default function App() {
       </main>
 
       {/* Nav */}
-      <nav style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.92)",backdropFilter:"blur(20px)",borderTop:"1px solid #E7E5E4",padding:"8px 0 env(safe-area-inset-bottom,8px)",display:"flex",justifyContent:"center",gap:4,zIndex:100}}>
-        {[{id:"home",icon:"🏠",label:"홈"},{id:"submit",icon:"✍️",label:"의견쓰기"},{id:"list",icon:"📋",label:"전체보기"},...(isAdmin?[{id:"admin",icon:"⚙️",label:"관리"}]:[])].map(t=>
-          <button key={t.id} onClick={()=>nav(t.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"8px 20px",borderRadius:12,background:page===t.id?"#EEF2FF":"transparent"}}>
-            <span style={{fontSize:20}}>{t.icon}</span>
-            <span style={{fontSize:10,fontWeight:page===t.id?700:500,color:page===t.id?"#4F46E5":"#78716C"}}>{t.label}</span>
+      <nav className="yd-tabbar" style={{zIndex:100}}>
+        {[{id:"home",icon:"home",label:"홈"},{id:"submit",icon:"pen",label:"의견쓰기"},{id:"list",icon:"list",label:"전체보기"},...(isAdmin?[{id:"admin",icon:"settings",label:"관리"}]:[])].map(t=>
+          <button key={t.id} onClick={()=>nav(t.id)} className={page===t.id?"yd-tab on":"yd-tab"}>
+            <Icon n={t.icon} s={22}/>
+            <span>{t.label}</span>
           </button>
         )}
       </nav>

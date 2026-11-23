@@ -3,23 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#4F46E5" />
+    <meta name="theme-color" content="#0F2442" />
     <meta name="description" content="여디디야 청년부 의견함" />
     <title>여디디야 의견함</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- 여디디야 통합 디자인 v1.1: 본문 Pretendard, 색·모양 /yd/tokens.css, 선 아이콘 /yd/icons.js -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <link rel="stylesheet" href="/yd/tokens.css" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; background: #FAFAF9; -webkit-font-smoothing: antialiased; }
-      input, textarea, select, button { font-family: inherit; }
+      body { font-family: var(--yd-sans); background: var(--yd-ivory); color: var(--yd-gray-900); letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+      input, textarea, select, button { font-family: inherit; letter-spacing: inherit; }
       button { cursor: pointer; border: none; }
-      ::placeholder { color: #A8A29E; }
+      ::placeholder { color: var(--yd-gray-400); }
       textarea { resize: vertical; }
       .su { animation: su .4s cubic-bezier(.16,1,.3,1); }
       @keyframes su { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
       @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    <script src="/yd/icons.js"></script>
   </head>
   <body>
     <div id="root"></div>

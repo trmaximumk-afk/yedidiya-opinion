@@ -1,0 +1,144 @@
+/* 여디디야 통합 디자인 v1.1 (2026-11-23, 머리줄 아래선·주요 버튼을 두빛나래 원본 값으로 맞춤) — 기준: 두빛나래 교적관리 v3.1 (대전대흥침례교회 홈페이지 색)
+   이 파일이 원본이다. 앱에는 복사해서 넣고, 고칠 때는 여기를 먼저 고친 뒤 각 앱에 다시 복사한다.
+   글꼴 경로(fonts/…)는 이 파일이 놓인 자리 기준이다. 한 파일짜리 앱에 통째로 넣을 때는 경로를 그 앱에 맞게 바꾼다. */
+
+@font-face {
+  font-family: 'MaruBuri';
+  src: url('fonts/maruburi-bold-subset.woff2') format('woff2');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+:root {
+  /* 대표색 */
+  --yd-navy: #0F2442;      /* 교회 남색: 머리줄, 주요 버튼 */
+  --yd-deep: #08172D;      /* 더 깊은 남색: 첫 화면 바닥 */
+  --yd-red: #EC2036;       /* 교회 레드: 오류, 결석, 활성 탭 표시 */
+  --yd-gold: #C9A961;      /* 앤틱 골드: 강조선, 장식 */
+  --yd-ivory: #F7F6F3;     /* 안쪽 화면 바탕 */
+
+  /* 남색(주 색) */
+  --yd-navy-50: #F4F6FA; --yd-navy-100: #E6EBF3; --yd-navy-200: #CBD5E5; --yd-navy-300: #A2B3CD; --yd-navy-400: #7189AE;
+  --yd-navy-500: #4B6690; --yd-navy-600: #2C4A75; --yd-navy-700: #213B60; --yd-navy-800: #1A3354; --yd-navy-900: #0F2442; --yd-navy-950: #08172D;
+  /* 와인(관리자, 새가족 표시) */
+  --yd-wine-50: #FBF3F4; --yd-wine-100: #F6E1E4; --yd-wine-200: #ECC2C9; --yd-wine-300: #DC97A3; --yd-wine-400: #C66577;
+  --yd-wine-500: #AD3D52; --yd-wine-600: #922A40; --yd-wine-700: #792134; --yd-wine-800: #5F1A29; --yd-wine-900: #4A1521;
+  /* 골드(강조, 관심 상태) */
+  --yd-gold-50: #FBF8F1; --yd-gold-100: #F5EDDA; --yd-gold-200: #EADAB2; --yd-gold-300: #DCC286; --yd-gold-400: #CCA85F;
+  --yd-gold-500: #B89144; --yd-gold-600: #9A7735; --yd-gold-700: #7B5E2B; --yd-gold-800: #5F4824; --yd-gold-900: #4A391E;
+  /* 레드 */
+  --yd-red-50: #FEF2F3; --yd-red-100: #FDE3E6; --yd-red-200: #FBC6CD; --yd-red-300: #F799A5; --yd-red-400: #F15F74;
+  --yd-red-500: #EC2036; --yd-red-600: #CF1A2F; --yd-red-700: #AB1627; --yd-red-800: #8D1724; --yd-red-900: #761823;
+  /* 아이보리 중성색(바탕, 테두리, 글자) */
+  --yd-gray-50: #F7F6F3; --yd-gray-100: #EFEDE8; --yd-gray-200: #E4E1DA; --yd-gray-300: #D2CDC3; --yd-gray-400: #A29D93;
+  --yd-gray-500: #78736A; --yd-gray-600: #5C5850; --yd-gray-700: #45423C; --yd-gray-800: #2E2C28; --yd-gray-900: #1E1D1A;
+  /* 채도 낮춘 기능색 */
+  --yd-green-50: #F1F8F4; --yd-green-100: #DCEFE3; --yd-green-200: #BBDEC9; --yd-green-500: #368A61; --yd-green-600: #2A6F4E; --yd-green-700: #235941;
+  --yd-blue-50: #F1F5FA; --yd-blue-100: #DFE8F3; --yd-blue-200: #BFD1E7; --yd-blue-500: #3F6AA0; --yd-blue-600: #315585; --yd-blue-700: #29456C;
+  --yd-orange-50: #FDF5F0; --yd-orange-100: #FAE6D9; --yd-orange-200: #F4CBB1; --yd-orange-500: #CC6436; --yd-orange-600: #AD4F2A; --yd-orange-700: #8C3F24;
+
+  /* 글꼴 */
+  --yd-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Segoe UI', sans-serif;
+  --yd-serif: 'MaruBuri', 'Noto Serif KR', 'Nanum Myeongjo', AppleMyungjo, serif;
+
+  /* 그림자(남색 기운), 둥글기 */
+  --yd-shadow-sm: 0 1px 2px rgba(15, 36, 66, 0.04), 0 4px 16px -8px rgba(15, 36, 66, 0.10);
+  --yd-shadow-md: 0 2px 4px rgba(15, 36, 66, 0.05), 0 12px 28px -12px rgba(15, 36, 66, 0.18);
+  --yd-shadow-lg: 0 4px 8px rgba(15, 36, 66, 0.06), 0 20px 40px -16px rgba(15, 36, 66, 0.25);
+  --yd-shadow-xl: 0 8px 16px rgba(8, 23, 45, 0.10), 0 32px 64px -24px rgba(8, 23, 45, 0.45);
+  --yd-r-md: 0.625rem; --yd-r-xl: 0.875rem; --yd-r-2xl: 1.25rem; --yd-r-3xl: 1.75rem;
+}
+
+/* 바탕 */
+.yd-body {
+  font-family: var(--yd-sans);
+  background-color: var(--yd-ivory);
+  color: var(--yd-gray-900);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 첫 화면·로그인 배경: 남색 + 위에서 내려오는 금색·레드 두 줄기 빛 */
+.yd-hero {
+  background-color: #08172D;
+  background-image:
+    radial-gradient(60% 45% at 28% -5%, rgba(201, 169, 97, 0.22) 0%, rgba(201, 169, 97, 0) 70%),
+    radial-gradient(55% 40% at 76% -8%, rgba(236, 32, 54, 0.16) 0%, rgba(236, 32, 54, 0) 70%),
+    linear-gradient(180deg, #13294A 0%, #0F2442 38%, #08172D 100%);
+  color: #fff;
+}
+/* 금색 가는 선(제목 장식) */
+.yd-gold-rule { height: 1px; background: linear-gradient(90deg, rgba(201, 169, 97, 0), rgba(201, 169, 97, 0.85), rgba(201, 169, 97, 0)); }
+
+/* 제목용 명조. 부분 글꼴이라 바뀌는 글자(사람 이름, 사용자가 쓴 글)에는 쓰지 않는다 */
+.yd-serif { font-family: var(--yd-serif); font-weight: 700; letter-spacing: -0.02em; }
+
+/* 안쪽 화면 머리줄: 남색 띠 + 아래 레드 가는 선 */
+/* 아래 2px 선은 두빛나래처럼 레드에서 골드로 흐려진다(배경 겹으로 그려 위치 속성을 건드리지 않음) */
+.yd-header { color: #fff; box-shadow: var(--yd-shadow-md);
+  background: linear-gradient(90deg, #EC2036 0%, rgba(204, 168, 95, 0.7) 50%, rgba(204, 168, 95, 0) 100%) left bottom / 100% 2px no-repeat, var(--yd-navy-900); }
+
+/* 카드 */
+.yd-card { background: #fff; border: 1px solid var(--yd-gray-200); border-radius: var(--yd-r-2xl); box-shadow: var(--yd-shadow-sm); }
+/* 남색 요약 카드(숫자 요약 등) */
+.yd-card-navy { background: linear-gradient(160deg, #1A3354 0%, #0F2442 60%, #08172D 100%); color: #fff; border-radius: var(--yd-r-2xl); box-shadow: var(--yd-shadow-lg); }
+
+/* 섹션 제목 앞 금색 막대 */
+.yd-bar { display: inline-block; width: 4px; height: 16px; border-radius: 999px; background: var(--yd-gold-500); flex: none; }
+
+/* 버튼 */
+.yd-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border-radius: var(--yd-r-xl);
+  font: 600 15px/1.2 var(--yd-sans); border: 1px solid transparent; cursor: pointer; transition: background .15s, border-color .15s, transform .1s; }
+.yd-btn:active { transform: scale(0.99); }
+.yd-btn:disabled { opacity: .5; cursor: default; }
+.yd-btn-primary { background: var(--yd-navy-600); color: #fff; box-shadow: var(--yd-shadow-md); }
+.yd-btn-primary:hover { background: var(--yd-navy-700); }
+.yd-btn-gold { background: linear-gradient(90deg, var(--yd-gold-600), var(--yd-gold-500)); color: #fff; box-shadow: 0 2px 4px rgba(74, 57, 30, 0.10); }
+.yd-btn-ghost { background: #fff; color: var(--yd-gray-600); border-color: var(--yd-gray-200); }
+.yd-btn-ghost:hover { background: var(--yd-gray-50); }
+.yd-btn-soft { background: var(--yd-gray-100); color: var(--yd-gray-700); }
+.yd-btn-danger { background: var(--yd-red-50); color: var(--yd-red-700); border-color: var(--yd-red-200); }
+.yd-btn-ok { background: var(--yd-green-600); color: #fff; }
+/* 남색 바탕 위 버튼(첫 화면) */
+.yd-btn-onhero { background: rgba(255, 255, 255, 0.06); color: #fff; border-color: rgba(255, 255, 255, 0.14); }
+.yd-btn-onhero:hover { border-color: rgba(220, 194, 134, 0.6); }
+
+/* 입력칸 */
+.yd-input { width: 100%; padding: 11px 14px; border: 1px solid var(--yd-gray-200); background: #fff; border-radius: var(--yd-r-xl);
+  font: 400 15px/1.4 var(--yd-sans); color: var(--yd-gray-900); outline: none; transition: border-color .15s, box-shadow .15s; }
+.yd-input::placeholder { color: var(--yd-gray-400); }
+.yd-input:focus { border-color: var(--yd-navy-400); box-shadow: 0 0 0 4px var(--yd-navy-100); }
+
+/* 작은 꼬리표 */
+.yd-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 600 11px/1.5 var(--yd-sans);
+  background: var(--yd-gray-100); color: var(--yd-gray-600); }
+.yd-chip-navy { background: var(--yd-navy-50); color: var(--yd-navy-700); }
+.yd-chip-gold { background: var(--yd-gold-50); color: var(--yd-gold-700); box-shadow: inset 0 0 0 1px var(--yd-gold-200); }
+.yd-chip-wine { background: var(--yd-wine-50); color: var(--yd-wine-700); }
+.yd-chip-red { background: var(--yd-red-50); color: var(--yd-red-700); }
+.yd-chip-green { background: var(--yd-green-50); color: var(--yd-green-700); box-shadow: inset 0 0 0 1px var(--yd-green-200); }
+
+/* 카드 제목 앞 아이콘 배지 */
+.yd-headicon { width: 28px; height: 28px; flex: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--yd-gold-50); color: var(--yd-gold-600); box-shadow: inset 0 0 0 1px rgba(234, 218, 178, 0.8); }
+.yd-headicon.navy { background: var(--yd-navy-50); color: var(--yd-navy-600); box-shadow: inset 0 0 0 1px rgba(203, 213, 229, 0.8); }
+.yd-headicon.wine { background: var(--yd-wine-50); color: var(--yd-wine-600); box-shadow: inset 0 0 0 1px rgba(236, 194, 201, 0.8); }
+.yd-headicon.green { background: var(--yd-green-50); color: var(--yd-green-600); box-shadow: inset 0 0 0 1px rgba(187, 222, 201, 0.8); }
+
+/* 하단 탭 */
+.yd-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; justify-content: space-around;
+  background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border-top: 1px solid var(--yd-gray-200);
+  box-shadow: 0 -8px 24px -16px rgba(15, 36, 66, 0.25); padding-bottom: env(safe-area-inset-bottom); }
+.yd-tab { position: relative; flex: 1; padding: 10px 0 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: 500 11px/1.2 var(--yd-sans); color: var(--yd-gray-400); background: none; border: 0; cursor: pointer; }
+.yd-tab.on { color: var(--yd-navy-900); font-weight: 700; }
+.yd-tab.on::before { content: ''; position: absolute; top: 0; height: 3px; width: 32px; border-radius: 0 0 999px 999px; background: var(--yd-red-500); }
+
+/* 창(모달) 뒤 가림 */
+.yd-scrim { position: fixed; inset: 0; z-index: 60; background: rgba(8, 23, 45, 0.6); backdrop-filter: blur(2px); }
+
+/* 그 밖 */
+.yd-pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.yd-tabular { font-variant-numeric: tabular-nums; }
+.yd-icon { display: inline-block; vertical-align: -0.15em; flex: none; }
