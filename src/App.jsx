@@ -6,11 +6,10 @@ import {
   deleteOpinion, restoreOpinion, permanentDeleteOpinion,
 } from "./lib/supabase";
 
-const ADMIN_PW = import.meta.env.VITE_ADMIN_PW || "2026";
-
 // ─── 여디디야청년부(포털)에서 들어온 경우 ───
 // 포털은 이 앱을 #yd=<토큰>&go=<user|admin> 으로 연다. 토큰은 yd_token, 마지막으로 확인된 역할은 yd_roles 에 둔다.
-// 임원진 로그인 버튼은 역할에 사역자(staff)나 임원(officer)이 있을 때만 보인다. 비밀번호 확인은 그대로다.
+// 임원진 모드는 토큰이 있고 역할에 사역자(staff)나 임원(officer)이 있을 때만 쓸 수 있다(비밀번호 없음).
+// go=admin 이면 바로 임원진 모드로, go=user 면 일반 모드로 연다. 머리글 버튼으로 두 모드를 오간다.
 const YD_TOKEN_KEY = "yd_token";
 const YD_ROLES_KEY = "yd_roles";
 const lsGet = k => { try { return window.localStorage.getItem(k); } catch { return null; } };
@@ -162,8 +161,6 @@ export default function App() {
   const [filterVis, setFilterVis] = useState("all");
   const [toast, setToast] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [loginPw, setLoginPw] = useState("");
   const [anim, setAnim] = useState(true);
   const [form, setForm] = useState({category:"",title:"",content:"",author:"",anonymous:true,secret:false,priority:"normal"});
   const [replyText, setReplyText] = useState("");
@@ -171,16 +168,20 @@ export default function App() {
   const [showDel, setShowDel] = useState(false);
   const [likedIds, setLikedIds] = useState({});
   const [trash, setTrash] = useState([]);
-  const [ydRoles, setYdRoles] = useState(readCachedRoles);
-  const canAdmin = hasAdminRole(ydRoles);
+  // 토큰이 없으면 저장된 역할은 쓰지 않는다.
+  const [ydToken, setYdToken] = useState(() => lsGet(YD_TOKEN_KEY));
+  const [ydRoles, setYdRoles] = useState(() => (lsGet(YD_TOKEN_KEY) ? readCachedRoles() : []));
+  const canAdmin = !!ydToken && hasAdminRole(ydRoles);
 
   // 포털 토큰 확인: 성공하면 역할 저장, 모르는 토큰이면 둘 다 지움, 연결·RPC 오류면 저장된 역할을 그대로 쓴다.
+  // go=admin 은 이 확인이 끝난 뒤에 한 번만 처리한다(저장된 역할로 켰다가 다시 끄지 않도록).
   useEffect(() => {
     const token = lsGet(YD_TOKEN_KEY);
     if (!token) return;
     let alive = true;
     (async () => {
       let roles = readCachedRoles();
+      let tokenOk = true;
       try {
         const { data, error } = await supabase.rpc("yd_portal_session", { p_token: token });
         if (error) throw error;
@@ -189,17 +190,18 @@ export default function App() {
           roles = Array.isArray(res.roles) ? res.roles : [];
           lsSet(YD_ROLES_KEY, JSON.stringify(roles));
         } else if (res && res.ok === false) {
-          roles = [];
+          roles = []; tokenOk = false;
           lsDel(YD_TOKEN_KEY); lsDel(YD_ROLES_KEY);
         }
       } catch (e) {
         console.warn("yd_portal_session 확인 실패, 저장된 역할을 씁니다:", e?.message || e);
       }
       if (!alive) return;
+      if (!tokenOk) setYdToken(null);
       setYdRoles(roles);
       if (PORTAL_GO === "admin" && !portalGoHandled) {
         portalGoHandled = true;
-        if (hasAdminRole(roles)) setShowLogin(true);
+        if (tokenOk && hasAdminRole(roles)) { setIsAdmin(true); notify("🔓 임원진 모드 활성화"); }
       }
     })();
     return () => { alive = false; };
@@ -232,6 +234,15 @@ export default function App() {
     setTimeout(() => { setPage(p); setSelected(o); setAnim(true); setReplyText(""); setShowDel(false); setEditingReply(false); }, 150);
   };
   const notify = m => { setToast(m); setTimeout(() => setToast(null), 2500); };
+
+  // 역할이 더는 임원진을 허락하지 않으면(토큰 거절·역할 바뀜) 임원진 모드를 끄고, 임원진 전용 화면에서는 홈으로 나간다.
+  useEffect(() => {
+    if (isAdmin && !canAdmin) {
+      setIsAdmin(false);
+      if (page === "admin" || page === "trash" || (page === "detail" && selected?.secret)) nav("home");
+    }
+  }, [isAdmin, canAdmin]);
+
   const pubOps = isAdmin ? opinions : opinions.filter(o => !o.secret);
 
   const doSubmit = async () => {
@@ -306,11 +317,6 @@ export default function App() {
     replied: opinions.filter(o => o.status === "replied").length,
   };
 
-  const doLogin = () => {
-    if (loginPw === ADMIN_PW) { setIsAdmin(true); setShowLogin(false); setLoginPw(""); notify("🔓 임원진 모드 활성화"); }
-    else notify("❌ 비밀번호가 올바르지 않습니다");
-  };
-
   const S = { card: { background: "#fff", borderRadius: 20, padding: 16, marginBottom: 12, border: "1px solid var(--yd-gray-200)", boxShadow: "var(--yd-shadow-sm)" } };
   // 제출 버튼의 색만 정한다(누를 수 있는지는 바꾸지 않는다)
   const ready = form.category&&form.title&&form.content&&(!form.secret||form.author);
@@ -326,19 +332,6 @@ export default function App() {
     <div style={{minHeight:"100vh",background:"var(--yd-ivory)"}}>
       {/* Toast */}
       {toast&&<Toast msg={toast}/>}
-
-      {/* Login Modal */}
-      {showLogin&&<div style={{position:"fixed",inset:0,background:"rgba(8,23,45,0.6)",backdropFilter:"blur(2px)",WebkitBackdropFilter:"blur(2px)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowLogin(false)}>
-        <div style={{background:"#fff",borderRadius:28,padding:"28px 24px 24px",width:"100%",maxWidth:320,boxShadow:"var(--yd-shadow-xl)"}} onClick={e=>e.stopPropagation()} className="su">
-          <div style={{textAlign:"center",marginBottom:20}}>
-            <div style={{width:56,height:56,margin:"0 auto 12px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--yd-gold-50)",color:"var(--yd-gold-600)",boxShadow:"inset 0 0 0 1px var(--yd-gold-200)"}}><Icon n="shield" s={26}/></div>
-            <h3 style={{fontSize:20,fontWeight:700,fontFamily:"var(--yd-serif)",letterSpacing:"-0.02em",color:"var(--yd-gray-900)"}}>임원진 인증</h3>
-            <p style={{fontSize:12.5,color:"var(--yd-gray-500)",marginTop:6}}>비밀번호를 입력해주세요</p>
-          </div>
-          <input className="yd-input" type="password" value={loginPw} onChange={e=>setLoginPw(e.target.value)} placeholder="비밀번호" autoFocus onKeyDown={e=>e.key==="Enter"&&doLogin()} style={{padding:"14px 16px",fontSize:16,textAlign:"center",letterSpacing:4,fontWeight:600}}/>
-          <button onClick={doLogin} className="yd-btn yd-btn-gold" style={{width:"100%",marginTop:14,padding:14,fontSize:15}}>확인</button>
-        </div>
-      </div>}
 
       {/* Header */}
       <header className="yd-hero" style={{padding:"24px 20px 24px",position:"relative",overflow:"hidden"}}>
@@ -356,7 +349,7 @@ export default function App() {
             <div className="yd-gold-rule" style={{width:150,margin:"12px 0 10px"}}/>
             <p style={{fontSize:13,color:"rgba(255,255,255,0.78)"}}>여러분의 목소리가 여디디야를 만들어갑니다</p>
           </div>
-          {(canAdmin||isAdmin)&&<button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):setShowLogin(true)} className="yd-btn yd-btn-onhero" style={{flex:"none",gap:6,padding:"8px 12px",borderRadius:12,fontSize:12,fontWeight:600,...(isAdmin?{background:"rgba(201,169,97,0.16)",borderColor:"rgba(220,194,134,0.6)",color:"var(--yd-gold-200)"}:{})}}>
+          {(canAdmin||isAdmin)&&<button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):(setIsAdmin(true),notify("🔓 임원진 모드 활성화"))} className="yd-btn yd-btn-onhero" style={{flex:"none",gap:6,padding:"8px 12px",borderRadius:12,fontSize:12,fontWeight:600,...(isAdmin?{background:"rgba(201,169,97,0.16)",borderColor:"rgba(220,194,134,0.6)",color:"var(--yd-gold-200)"}:{})}}>
             {isAdmin?<><Icon n="shieldcheck" s={14}/>임원진</>:<><Icon n="lock" s={14}/>로그인</>}
           </button>}
         </div>
