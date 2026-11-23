@@ -1,11 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import {
+  supabase,
   fetchOpinions, fetchDeletedOpinions, createOpinion, likeOpinion,
   updateStatus, replyOpinion, removeReply,
   deleteOpinion, restoreOpinion, permanentDeleteOpinion,
 } from "./lib/supabase";
 
 const ADMIN_PW = import.meta.env.VITE_ADMIN_PW || "2026";
+
+// ─── 여디디야청년부(포털)에서 들어온 경우 ───
+// 포털은 이 앱을 #yd=<토큰>&go=<user|admin> 으로 연다. 토큰은 yd_token, 마지막으로 확인된 역할은 yd_roles 에 둔다.
+// 임원진 로그인 버튼은 역할에 사역자(staff)나 임원(officer)이 있을 때만 보인다. 비밀번호 확인은 그대로다.
+const YD_TOKEN_KEY = "yd_token";
+const YD_ROLES_KEY = "yd_roles";
+const lsGet = k => { try { return window.localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { window.localStorage.setItem(k, v); } catch { /* 저장소를 못 쓰면 이번 화면에서만 쓴다 */ } };
+const lsDel = k => { try { window.localStorage.removeItem(k); } catch { /* 무시 */ } };
+function readCachedRoles() {
+  try { const r = JSON.parse(lsGet(YD_ROLES_KEY) || "[]"); return Array.isArray(r) ? r : []; } catch { return []; }
+}
+const hasAdminRole = roles => roles.includes("staff") || roles.includes("officer");
+
+// 시작할 때 한 번만 주소의 #yd=…&go=… 를 읽어 토큰을 저장하고, 주소에서는 지운다.
+// 다른 토큰으로 들어오면 앞 사람의 역할(yd_roles)은 버리고 새로 확인한다.
+const PORTAL_GO = (() => {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash || "";
+  if (!hash.includes("yd=")) return null;
+  const p = new URLSearchParams(hash.replace(/^#/, ""));
+  const token = p.get("yd");
+  if (token) {
+    if (lsGet(YD_TOKEN_KEY) !== token) lsDel(YD_ROLES_KEY);
+    lsSet(YD_TOKEN_KEY, token);
+  }
+  try { window.history.replaceState(null, "", window.location.pathname + window.location.search); } catch { /* 무시 */ }
+  return p.get("go");
+})();
+let portalGoHandled = false;
 
 // ─── 여디디야 통합 디자인 v1.1 ───
 // 색·글꼴·모양은 /yd/tokens.css 의 변수(var(--yd-…))와 .yd-… 모양만 쓴다.
@@ -140,6 +171,39 @@ export default function App() {
   const [showDel, setShowDel] = useState(false);
   const [likedIds, setLikedIds] = useState({});
   const [trash, setTrash] = useState([]);
+  const [ydRoles, setYdRoles] = useState(readCachedRoles);
+  const canAdmin = hasAdminRole(ydRoles);
+
+  // 포털 토큰 확인: 성공하면 역할 저장, 모르는 토큰이면 둘 다 지움, 연결·RPC 오류면 저장된 역할을 그대로 쓴다.
+  useEffect(() => {
+    const token = lsGet(YD_TOKEN_KEY);
+    if (!token) return;
+    let alive = true;
+    (async () => {
+      let roles = readCachedRoles();
+      try {
+        const { data, error } = await supabase.rpc("yd_portal_session", { p_token: token });
+        if (error) throw error;
+        const res = typeof data === "string" ? JSON.parse(data) : data;
+        if (res && res.ok === true) {
+          roles = Array.isArray(res.roles) ? res.roles : [];
+          lsSet(YD_ROLES_KEY, JSON.stringify(roles));
+        } else if (res && res.ok === false) {
+          roles = [];
+          lsDel(YD_TOKEN_KEY); lsDel(YD_ROLES_KEY);
+        }
+      } catch (e) {
+        console.warn("yd_portal_session 확인 실패, 저장된 역할을 씁니다:", e?.message || e);
+      }
+      if (!alive) return;
+      setYdRoles(roles);
+      if (PORTAL_GO === "admin" && !portalGoHandled) {
+        portalGoHandled = true;
+        if (hasAdminRole(roles)) setShowLogin(true);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   // Load opinions
   const load = useCallback(async () => {
@@ -292,9 +356,9 @@ export default function App() {
             <div className="yd-gold-rule" style={{width:150,margin:"12px 0 10px"}}/>
             <p style={{fontSize:13,color:"rgba(255,255,255,0.78)"}}>여러분의 목소리가 여디디야를 만들어갑니다</p>
           </div>
-          <button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):setShowLogin(true)} className="yd-btn yd-btn-onhero" style={{flex:"none",gap:6,padding:"8px 12px",borderRadius:12,fontSize:12,fontWeight:600,...(isAdmin?{background:"rgba(201,169,97,0.16)",borderColor:"rgba(220,194,134,0.6)",color:"var(--yd-gold-200)"}:{})}}>
+          {(canAdmin||isAdmin)&&<button onClick={()=>isAdmin?(setIsAdmin(false),notify("🔒 로그아웃 완료")):setShowLogin(true)} className="yd-btn yd-btn-onhero" style={{flex:"none",gap:6,padding:"8px 12px",borderRadius:12,fontSize:12,fontWeight:600,...(isAdmin?{background:"rgba(201,169,97,0.16)",borderColor:"rgba(220,194,134,0.6)",color:"var(--yd-gold-200)"}:{})}}>
             {isAdmin?<><Icon n="shieldcheck" s={14}/>임원진</>:<><Icon n="lock" s={14}/>로그인</>}
-          </button>
+          </button>}
         </div>
       </header>
 
